@@ -25,6 +25,7 @@ uvicorn app.main:app --reload --app-dir .
 - API docs: http://127.0.0.1:8000/docs
 - Health (includes a DB ping): http://127.0.0.1:8000/health
 - Answer: `POST /api/search/answer`
+- UI (separate Vite app): http://localhost:5173 — see `frontend/README.md`
 
 Retrieval methods: `keyword`, `vector` (RAG default; M7 context eval
 kept it), `hybrid`. Citations include `clause_id` (stable identity).

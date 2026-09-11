@@ -7,7 +7,7 @@ This is an SIH project. The live corpus is a small **pilot**: freely
 published QCO/circular PDFs plus standard catalogue metadata — **not**
 the paid full text of Indian Standards.
 
-## Current status (Milestones 1–6)
+## Current status (Milestones 1–8)
 
 | Milestone | What shipped |
 |---|---|
@@ -17,14 +17,18 @@ the paid full text of Indian Standards.
 | M4 | Optional LLM answers with extractive fallback |
 | M5 | Corpus expansion (3 QCOs), 26-case retrieval evaluation |
 | M6 | Hybrid RRF retrieval, vector cosine-similarity floor, eval-driven defaults |
+| M7 | RAG/context eval, API hardening, stable `Clause.id` on re-ingest |
+| M8 | React + TypeScript frontend for grounded answers and citations |
 
-**Not included:** frontend, authentication, laboratory/product tables
-(schema exists, tables are empty), Hindi generation, Docker files in
-this repo (local Postgres uses `pgvector/pgvector:pg16`).
+**Not included:** authentication, laboratory/product tables (schema
+exists, tables are empty), Hindi generation, Docker files in this repo
+(local Postgres uses `pgvector/pgvector:pg16`).
 
 ## Architecture
 
 ```
+Frontend (Vite / React)
+         → FastAPI POST /api/search/answer
 known URL → fetcher → pdfplumber → clause parser → PostgreSQL
          → MiniLM embeddings (pgvector)
          → keyword | vector | hybrid retrieval
@@ -81,14 +85,33 @@ Run the API from `backend/`:
 uvicorn app.main:app --reload --app-dir .
 ```
 
+In a second terminal, run the UI from `frontend/`:
+
+```bash
+npm install
+npm run dev
+```
+
+- UI: http://localhost:5173 (Vite proxies `/api` and `/health` to the API)
 - Health: http://127.0.0.1:8000/health
 - Docs: http://127.0.0.1:8000/docs
+
+The frontend sends `{ "query": "..." }` to `POST /api/search/answer` and
+renders the API's `answer`, `grounded`, `citations`, and `sources`. No
+frontend API key is required. Do not set `VITE_API_BASE_URL` for local
+development unless you have added CORS on the backend.
 
 ## Tests (offline, no paid API calls)
 
 ```bash
 export TEST_DATABASE_URL="postgresql+psycopg2://bis_user:change_me@localhost:5432/bis_test"
 pytest
+```
+
+Frontend (from `frontend/`):
+
+```bash
+npm test
 ```
 
 ## Evaluation (read-only against `bis_db`)
