@@ -37,6 +37,8 @@ from typing import Dict, List, Optional, Sequence
 
 from sqlalchemy.orm import Session
 
+from app.services.answer_generation import ExtractiveAnswerGenerationProvider
+from app.services.rag import RAGConfig, RAGService
 from app.services.retrieval import BISRetrievalService
 
 DEFAULT_DATASET_PATH = (
@@ -328,3 +330,154 @@ def run_evaluation(
         )
 
     return _aggregate(method, k_values, case_results)
+
+
+# ---------------------------------------------------------------------------
+# RAG / context evaluation (Milestone 7)
+# ---------------------------------------------------------------------------
+#
+# Retrieval metrics (above) score ranked search lists. The public answer
+# path only ever grounds on the *selected* RAG context (dedup + score
+# floor + max_context_items, default 5). This harness scores that window
+# with the extractive provider — never an LLM — so DEFAULT_METHOD can be
+# chosen from evidence rather than retrieval@10 alone.
+
+
+@dataclass
+class RagCaseResult:
+    case: EvalCase
+    context_clause_ids: List[int]
+    cited_clause_ids: List[int]
+    grounded: bool
+    context_used: int
+    retrieval_method: str
+    context_recall: Optional[float]
+    context_precision: Optional[float]
+    correctly_ungrounded: Optional[bool]
+    citations_subset_of_context: bool
+
+
+@dataclass
+class RagEvaluationReport:
+    """Aggregate RAG/context metrics for one retrieval method."""
+
+    method: str
+    case_results: List[RagCaseResult]
+    scored_case_count: int
+    no_result_case_count: int
+    context_recall: Optional[float]
+    context_precision: Optional[float]
+    grounded_rate: Optional[float]
+    ungrounded_rate: Optional[float]
+    citation_integrity_rate: float
+
+    def by_category(self) -> Dict[str, "RagEvaluationReport"]:
+        categories = sorted({cr.case.category for cr in self.case_results})
+        return {
+            cat: _aggregate_rag(
+                self.method, [cr for cr in self.case_results if cr.case.category == cat]
+            )
+            for cat in categories
+        }
+
+
+def _aggregate_rag(method: str, case_results: List[RagCaseResult]) -> RagEvaluationReport:
+    scored = [cr for cr in case_results if not cr.case.expect_no_result]
+    no_result = [cr for cr in case_results if cr.case.expect_no_result]
+
+    def _mean(vals: List[float]) -> Optional[float]:
+        return (sum(vals) / len(vals)) if vals else None
+
+    return RagEvaluationReport(
+        method=method,
+        case_results=case_results,
+        scored_case_count=len(scored),
+        no_result_case_count=len(no_result),
+        context_recall=_mean([cr.context_recall for cr in scored if cr.context_recall is not None]),
+        context_precision=_mean(
+            [cr.context_precision for cr in scored if cr.context_precision is not None]
+        ),
+        grounded_rate=_mean([1.0 if cr.grounded else 0.0 for cr in scored]) if scored else None,
+        ungrounded_rate=(
+            _mean([1.0 if cr.correctly_ungrounded else 0.0 for cr in no_result])
+            if no_result
+            else None
+        ),
+        citation_integrity_rate=(
+            sum(1 for cr in case_results if cr.citations_subset_of_context) / len(case_results)
+            if case_results
+            else 1.0
+        ),
+    )
+
+
+def run_rag_evaluation(
+    session: Session,
+    retrieval_service: BISRetrievalService,
+    cases: List[EvalCase],
+    *,
+    method: str,
+    config: Optional[RAGConfig] = None,
+) -> RagEvaluationReport:
+    """
+    Run extractive RAG on every eval case for ``method``.
+
+    Offline and deterministic: uses ExtractiveAnswerGenerationProvider
+    (no LLM, no network). Scores whether gold ``Clause.id`` values appear
+    in the selected context window, whether no-result cases stay
+    ungrounded, and whether citations are a subset of that context.
+    """
+    rag = RAGService(
+        session,
+        retrieval_service,
+        ExtractiveAnswerGenerationProvider(),
+        config=config or RAGConfig(),
+    )
+    case_results: List[RagCaseResult] = []
+
+    for case in cases:
+        answer = rag.answer(case.question, method=method)
+        context_ids = [s.clause_id for s in answer.sources if s.clause_id is not None]
+        cited_ids = [c.clause_id for c in answer.citations if c.clause_id is not None]
+        context_set = set(context_ids)
+        citations_ok = all(
+            (cid in context_set) for cid in cited_ids
+        ) and all(
+            (c.clause_id is None or c.clause_id in context_set) for c in answer.citations
+        )
+
+        if case.expect_no_result:
+            case_results.append(
+                RagCaseResult(
+                    case=case,
+                    context_clause_ids=context_ids,
+                    cited_clause_ids=cited_ids,
+                    grounded=answer.grounded,
+                    context_used=answer.context_used,
+                    retrieval_method=answer.retrieval_method,
+                    context_recall=None,
+                    context_precision=None,
+                    correctly_ungrounded=(not answer.grounded),
+                    citations_subset_of_context=citations_ok,
+                )
+            )
+            continue
+
+        gold = case.expected_clause_ids
+        hits = sum(1 for g in gold if g in context_set)
+        case_results.append(
+            RagCaseResult(
+                case=case,
+                context_clause_ids=context_ids,
+                cited_clause_ids=cited_ids,
+                grounded=answer.grounded,
+                context_used=answer.context_used,
+                retrieval_method=answer.retrieval_method,
+                context_recall=(hits / len(gold)) if gold else None,
+                context_precision=(hits / len(context_ids)) if context_ids else 0.0,
+                correctly_ungrounded=None,
+                citations_subset_of_context=citations_ok,
+            )
+        )
+
+    return _aggregate_rag(method, case_results)

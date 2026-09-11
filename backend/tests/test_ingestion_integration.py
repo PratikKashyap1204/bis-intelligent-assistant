@@ -129,6 +129,104 @@ def test_ingest_document_twice_is_idempotent_not_duplicated(db_session):
     clause_rows = db_session.query(Clause).filter(Clause.document_id == doc2.id).count()
     assert clause_rows == 2  # NOT 4 — clauses were replaced, not appended
 
+    first_ids = {
+        c.id
+        for c in db_session.query(Clause).filter(Clause.document_id == doc1.id).all()
+    }
+    # Re-query after second ingest — ids must be the same rows, not new PKs.
+    second_ids = {
+        c.id
+        for c in db_session.query(Clause).filter(Clause.document_id == doc2.id).all()
+    }
+    assert first_ids == second_ids
+
+
+def test_reingest_preserves_clause_ids_and_does_not_use_clause_number(db_session):
+    from app.models.embedding import ClauseEmbedding
+    from app.services.embedding_provider import DeterministicHashEmbeddingProvider
+    from app.services.embedding_service import ClauseEmbeddingService
+
+    service = BISIngestionService(db_session)
+    standard, _ = service.ingest_standard(SAMPLE_STANDARD)
+    # Two clauses share clause_number "1" — identity must still be Clause.id.
+    colliding = [
+        RawClause(clause_number="1", content="Alpha content.", sequence_in_document=1),
+        RawClause(clause_number="1", content="Beta content.", sequence_in_document=2),
+    ]
+    document, _, _ = service.ingest_document(SAMPLE_DOCUMENT, colliding, standard=standard)
+    db_session.commit()
+    original = list(
+        db_session.query(Clause)
+        .filter(Clause.document_id == document.id)
+        .order_by(Clause.id)
+        .all()
+    )
+    original_ids = [c.id for c in original]
+    assert original[0].clause_number == original[1].clause_number == "1"
+    assert original_ids[0] != original_ids[1]
+
+    provider = DeterministicHashEmbeddingProvider()
+    ClauseEmbeddingService(db_session, provider).embed_clauses(original)
+    db_session.commit()
+    embedding_clause_ids = {
+        row.clause_id
+        for row in db_session.query(ClauseEmbedding).filter(
+            ClauseEmbedding.document_id == document.id
+        )
+    }
+    assert embedding_clause_ids == set(original_ids)
+
+    # Same content, different clause_number labels — still the same texts.
+    relabeled = [
+        RawClause(clause_number="X", content="Alpha content.", sequence_in_document=1),
+        RawClause(clause_number="Y", content="Beta content.", sequence_in_document=2),
+    ]
+    service.ingest_document(SAMPLE_DOCUMENT, relabeled, standard=standard)
+    db_session.commit()
+
+    again = list(
+        db_session.query(Clause)
+        .filter(Clause.document_id == document.id)
+        .order_by(Clause.id)
+        .all()
+    )
+    assert [c.id for c in again] == original_ids
+    assert {c.content for c in again} == {"Alpha content.", "Beta content."}
+    assert {c.clause_number for c in again} == {"X", "Y"}
+    still_embedded = {
+        row.clause_id
+        for row in db_session.query(ClauseEmbedding).filter(
+            ClauseEmbedding.document_id == document.id
+        )
+    }
+    assert still_embedded == set(original_ids)
+
+
+def test_reingest_replaces_rows_when_clause_text_actually_changes(db_session):
+    service = BISIngestionService(db_session)
+    standard, _ = service.ingest_standard(SAMPLE_STANDARD)
+    document, _, _ = service.ingest_document(
+        SAMPLE_DOCUMENT, SAMPLE_CLAUSES, standard=standard
+    )
+    db_session.commit()
+    original_ids = {
+        c.id
+        for c in db_session.query(Clause).filter(Clause.document_id == document.id)
+    }
+
+    changed = [
+        RawClause(clause_number="1", content="Changed clause one content."),
+        RawClause(clause_number="2", content="Sample clause two content."),
+    ]
+    service.ingest_document(SAMPLE_DOCUMENT, changed, standard=standard)
+    db_session.commit()
+
+    new_rows = list(db_session.query(Clause).filter(Clause.document_id == document.id))
+    assert len(new_rows) == 2
+    new_ids = {c.id for c in new_rows}
+    assert new_ids != original_ids
+    assert "Changed clause one content." in {c.content for c in new_rows}
+
 
 def test_ingest_document_deduplicates_by_content_hash_even_with_new_url(db_session):
     """Same content_hash, different source_url -> still treated as the same document."""

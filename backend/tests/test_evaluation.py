@@ -29,6 +29,7 @@ from app.services.evaluation import (
     precision_at_k,
     recall_at_k,
     run_evaluation,
+    run_rag_evaluation,
 )
 from app.services.retrieval import BISRetrievalService, VectorRetrievalBackend
 
@@ -355,3 +356,42 @@ def test_run_evaluation_vector_does_not_abstain_on_unrelated_query(db_session):
     assert report.case_results[0].retrieved_clause_ids
     for v in report.recall_at_k.values():
         assert math.isnan(v)
+
+
+def test_run_rag_evaluation_scores_context_window_not_raw_list(db_session):
+    _, _, clauses = _seed(db_session)
+    certification_clause = clauses[0]
+    service = BISRetrievalService(db_session)
+    case = EvalCase(
+        id="rag1",
+        category="direct",
+        question="Is certification mandatory for widgets?",
+        expected_clause_ids=[certification_clause.id],
+    )
+    report = run_rag_evaluation(db_session, service, [case], method="keyword")
+    assert report.scored_case_count == 1
+    assert report.context_recall == 1.0
+    assert report.citation_integrity_rate == 1.0
+    assert certification_clause.id in report.case_results[0].context_clause_ids
+    assert all(
+        cid in report.case_results[0].context_clause_ids
+        for cid in report.case_results[0].cited_clause_ids
+    )
+
+
+def test_run_rag_evaluation_marks_no_result_case_ungrounded_when_empty(db_session):
+    _seed(db_session)
+    service = BISRetrievalService(db_session)
+    case = EvalCase(
+        id="rag2",
+        category="out_of_scope",
+        question="zzzzqwerty banana spaceship",
+        expected_clause_ids=[],
+        expect_no_result=True,
+    )
+    report = run_rag_evaluation(db_session, service, [case], method="keyword")
+    assert report.scored_case_count == 0
+    assert report.no_result_case_count == 1
+    assert report.ungrounded_rate == 1.0
+    assert report.case_results[0].correctly_ungrounded is True
+    assert report.case_results[0].grounded is False

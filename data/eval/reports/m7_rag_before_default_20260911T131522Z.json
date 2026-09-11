@@ -1,0 +1,2136 @@
+{
+  "keyword": {
+    "method": "keyword",
+    "scored_case_count": 19,
+    "no_result_case_count": 7,
+    "context_recall": 0.15789473684210525,
+    "context_precision": 0.10526315789473684,
+    "grounded_rate": 1.0,
+    "ungrounded_rate": 0.14285714285714285,
+    "citation_integrity_rate": 1.0,
+    "by_category": {
+      "absent_from_corpus": {
+        "scored_case_count": 0,
+        "no_result_case_count": 4,
+        "context_recall": null,
+        "context_precision": null,
+        "grounded_rate": null,
+        "ungrounded_rate": 0.0,
+        "citation_integrity_rate": 1.0
+      },
+      "cross_document": {
+        "scored_case_count": 2,
+        "no_result_case_count": 0,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "grounded_rate": 1.0,
+        "ungrounded_rate": null,
+        "citation_integrity_rate": 1.0
+      },
+      "direct": {
+        "scored_case_count": 12,
+        "no_result_case_count": 0,
+        "context_recall": 0.25,
+        "context_precision": 0.16666666666666666,
+        "grounded_rate": 1.0,
+        "ungrounded_rate": null,
+        "citation_integrity_rate": 1.0
+      },
+      "multi_clause": {
+        "scored_case_count": 3,
+        "no_result_case_count": 0,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "grounded_rate": 1.0,
+        "ungrounded_rate": null,
+        "citation_integrity_rate": 1.0
+      },
+      "out_of_scope": {
+        "scored_case_count": 0,
+        "no_result_case_count": 3,
+        "context_recall": null,
+        "context_precision": null,
+        "grounded_rate": null,
+        "ungrounded_rate": 0.3333333333333333,
+        "citation_integrity_rate": 1.0
+      },
+      "paraphrase": {
+        "scored_case_count": 2,
+        "no_result_case_count": 0,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "grounded_rate": 1.0,
+        "ungrounded_rate": null,
+        "citation_integrity_rate": 1.0
+      }
+    },
+    "cases": [
+      {
+        "id": "q01",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          263
+        ],
+        "context_clause_ids": [
+          263,
+          272
+        ],
+        "cited_clause_ids": [
+          263,
+          272
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 1.0,
+        "context_precision": 0.5,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q02",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          266
+        ],
+        "context_clause_ids": [
+          266,
+          267
+        ],
+        "cited_clause_ids": [
+          266,
+          267
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 1.0,
+        "context_precision": 0.5,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q03",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          285
+        ],
+        "context_clause_ids": [
+          262
+        ],
+        "cited_clause_ids": [
+          262
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q04",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          389
+        ],
+        "context_clause_ids": [],
+        "cited_clause_ids": [],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q05",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          390
+        ],
+        "context_clause_ids": [
+          392
+        ],
+        "cited_clause_ids": [
+          392
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q06",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          391
+        ],
+        "context_clause_ids": [
+          261
+        ],
+        "cited_clause_ids": [
+          261
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q07",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          392
+        ],
+        "context_clause_ids": [],
+        "cited_clause_ids": [],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q08",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          397
+        ],
+        "context_clause_ids": [
+          397
+        ],
+        "cited_clause_ids": [
+          397
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 1.0,
+        "context_precision": 1.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q09",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          399
+        ],
+        "context_clause_ids": [
+          261,
+          277,
+          397
+        ],
+        "cited_clause_ids": [
+          261,
+          277,
+          397
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q10",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          400
+        ],
+        "context_clause_ids": [
+          396
+        ],
+        "cited_clause_ids": [
+          396
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q11",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          401
+        ],
+        "context_clause_ids": [
+          261,
+          277,
+          396
+        ],
+        "cited_clause_ids": [
+          261,
+          277,
+          396
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q12",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          356
+        ],
+        "context_clause_ids": [
+          270
+        ],
+        "cited_clause_ids": [
+          270
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q13",
+        "category": "paraphrase",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          263
+        ],
+        "context_clause_ids": [
+          261,
+          272
+        ],
+        "cited_clause_ids": [
+          261,
+          272
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q14",
+        "category": "paraphrase",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          356
+        ],
+        "context_clause_ids": [
+          270
+        ],
+        "cited_clause_ids": [
+          270
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q15",
+        "category": "multi_clause",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          264,
+          265
+        ],
+        "context_clause_ids": [
+          270,
+          273,
+          267
+        ],
+        "cited_clause_ids": [
+          270,
+          273,
+          267
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q16",
+        "category": "multi_clause",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          267,
+          269
+        ],
+        "context_clause_ids": [
+          270
+        ],
+        "cited_clause_ids": [
+          270
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q17",
+        "category": "multi_clause",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          398,
+          399,
+          400
+        ],
+        "context_clause_ids": [
+          396,
+          397
+        ],
+        "cited_clause_ids": [
+          396,
+          397
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q18",
+        "category": "cross_document",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          391,
+          399
+        ],
+        "context_clause_ids": [],
+        "cited_clause_ids": [],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q19",
+        "category": "cross_document",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          392,
+          400
+        ],
+        "context_clause_ids": [
+          266,
+          259
+        ],
+        "cited_clause_ids": [
+          266,
+          259
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q20",
+        "category": "out_of_scope",
+        "expect_no_result": true,
+        "expected_clause_ids": [],
+        "context_clause_ids": [
+          287,
+          288,
+          289
+        ],
+        "cited_clause_ids": [
+          287,
+          288,
+          289
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": null,
+        "context_precision": null,
+        "correctly_ungrounded": false,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q21",
+        "category": "out_of_scope",
+        "expect_no_result": true,
+        "expected_clause_ids": [],
+        "context_clause_ids": [],
+        "cited_clause_ids": [],
+        "grounded": false,
+        "context_used": 0,
+        "context_recall": null,
+        "context_precision": null,
+        "correctly_ungrounded": true,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q22",
+        "category": "out_of_scope",
+        "expect_no_result": true,
+        "expected_clause_ids": [],
+        "context_clause_ids": [
+          274,
+          275,
+          285
+        ],
+        "cited_clause_ids": [
+          274,
+          275,
+          285
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": null,
+        "context_precision": null,
+        "correctly_ungrounded": false,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q23",
+        "category": "absent_from_corpus",
+        "expect_no_result": true,
+        "expected_clause_ids": [],
+        "context_clause_ids": [],
+        "cited_clause_ids": [],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": null,
+        "context_precision": null,
+        "correctly_ungrounded": false,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q24",
+        "category": "absent_from_corpus",
+        "expect_no_result": true,
+        "expected_clause_ids": [],
+        "context_clause_ids": [],
+        "cited_clause_ids": [],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": null,
+        "context_precision": null,
+        "correctly_ungrounded": false,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q25",
+        "category": "absent_from_corpus",
+        "expect_no_result": true,
+        "expected_clause_ids": [],
+        "context_clause_ids": [
+          261
+        ],
+        "cited_clause_ids": [
+          261
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": null,
+        "context_precision": null,
+        "correctly_ungrounded": false,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q26",
+        "category": "absent_from_corpus",
+        "expect_no_result": true,
+        "expected_clause_ids": [],
+        "context_clause_ids": [
+          266,
+          286
+        ],
+        "cited_clause_ids": [
+          266,
+          286
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": null,
+        "context_precision": null,
+        "correctly_ungrounded": false,
+        "citations_subset_of_context": true
+      }
+    ]
+  },
+  "vector": {
+    "method": "vector",
+    "scored_case_count": 19,
+    "no_result_case_count": 7,
+    "context_recall": 0.47368421052631576,
+    "context_precision": 0.10526315789473684,
+    "grounded_rate": 1.0,
+    "ungrounded_rate": 0.14285714285714285,
+    "citation_integrity_rate": 1.0,
+    "by_category": {
+      "absent_from_corpus": {
+        "scored_case_count": 0,
+        "no_result_case_count": 4,
+        "context_recall": null,
+        "context_precision": null,
+        "grounded_rate": null,
+        "ungrounded_rate": 0.0,
+        "citation_integrity_rate": 1.0
+      },
+      "cross_document": {
+        "scored_case_count": 2,
+        "no_result_case_count": 0,
+        "context_recall": 0.5,
+        "context_precision": 0.2,
+        "grounded_rate": 1.0,
+        "ungrounded_rate": null,
+        "citation_integrity_rate": 1.0
+      },
+      "direct": {
+        "scored_case_count": 12,
+        "no_result_case_count": 0,
+        "context_recall": 0.5833333333333334,
+        "context_precision": 0.11666666666666665,
+        "grounded_rate": 1.0,
+        "ungrounded_rate": null,
+        "citation_integrity_rate": 1.0
+      },
+      "multi_clause": {
+        "scored_case_count": 3,
+        "no_result_case_count": 0,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "grounded_rate": 1.0,
+        "ungrounded_rate": null,
+        "citation_integrity_rate": 1.0
+      },
+      "out_of_scope": {
+        "scored_case_count": 0,
+        "no_result_case_count": 3,
+        "context_recall": null,
+        "context_precision": null,
+        "grounded_rate": null,
+        "ungrounded_rate": 0.3333333333333333,
+        "citation_integrity_rate": 1.0
+      },
+      "paraphrase": {
+        "scored_case_count": 2,
+        "no_result_case_count": 0,
+        "context_recall": 0.5,
+        "context_precision": 0.1,
+        "grounded_rate": 1.0,
+        "ungrounded_rate": null,
+        "citation_integrity_rate": 1.0
+      }
+    },
+    "cases": [
+      {
+        "id": "q01",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          263
+        ],
+        "context_clause_ids": [
+          272,
+          263,
+          266,
+          261,
+          269
+        ],
+        "cited_clause_ids": [
+          272,
+          263,
+          266,
+          261,
+          269
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 1.0,
+        "context_precision": 0.2,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q02",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          266
+        ],
+        "context_clause_ids": [
+          266,
+          272,
+          263,
+          267,
+          269
+        ],
+        "cited_clause_ids": [
+          266,
+          272,
+          263,
+          267,
+          269
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 1.0,
+        "context_precision": 0.2,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q03",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          285
+        ],
+        "context_clause_ids": [
+          262,
+          266,
+          260,
+          272,
+          285
+        ],
+        "cited_clause_ids": [
+          262,
+          266,
+          260,
+          272,
+          285
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 1.0,
+        "context_precision": 0.2,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q04",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          389
+        ],
+        "context_clause_ids": [
+          389,
+          393,
+          394,
+          388,
+          392
+        ],
+        "cited_clause_ids": [
+          389,
+          393,
+          394,
+          388,
+          392
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 1.0,
+        "context_precision": 0.2,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q05",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          390
+        ],
+        "context_clause_ids": [
+          393,
+          394,
+          389,
+          388,
+          269
+        ],
+        "cited_clause_ids": [
+          393,
+          394,
+          389,
+          388,
+          269
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q06",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          391
+        ],
+        "context_clause_ids": [
+          394,
+          389,
+          388,
+          393,
+          392
+        ],
+        "cited_clause_ids": [
+          394,
+          389,
+          388,
+          393,
+          392
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q07",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          392
+        ],
+        "context_clause_ids": [
+          389,
+          392,
+          393,
+          394,
+          388
+        ],
+        "cited_clause_ids": [
+          389,
+          392,
+          393,
+          394,
+          388
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 1.0,
+        "context_precision": 0.2,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q08",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          397
+        ],
+        "context_clause_ids": [
+          397,
+          396,
+          401,
+          288,
+          298
+        ],
+        "cited_clause_ids": [
+          397,
+          396,
+          401,
+          288,
+          298
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 1.0,
+        "context_precision": 0.2,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q09",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          399
+        ],
+        "context_clause_ids": [
+          397,
+          396,
+          401,
+          288,
+          262
+        ],
+        "cited_clause_ids": [
+          397,
+          396,
+          401,
+          288,
+          262
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q10",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          400
+        ],
+        "context_clause_ids": [
+          397,
+          396,
+          401,
+          288,
+          262
+        ],
+        "cited_clause_ids": [
+          397,
+          396,
+          401,
+          288,
+          262
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q11",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          401
+        ],
+        "context_clause_ids": [
+          396,
+          397,
+          401,
+          294,
+          288
+        ],
+        "cited_clause_ids": [
+          396,
+          397,
+          401,
+          294,
+          288
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 1.0,
+        "context_precision": 0.2,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q12",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          356
+        ],
+        "context_clause_ids": [
+          275,
+          273,
+          280,
+          355,
+          278
+        ],
+        "cited_clause_ids": [
+          275,
+          273,
+          280,
+          355,
+          278
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q13",
+        "category": "paraphrase",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          263
+        ],
+        "context_clause_ids": [
+          272,
+          266,
+          263,
+          261,
+          269
+        ],
+        "cited_clause_ids": [
+          272,
+          266,
+          263,
+          261,
+          269
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 1.0,
+        "context_precision": 0.2,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q14",
+        "category": "paraphrase",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          356
+        ],
+        "context_clause_ids": [
+          264,
+          310,
+          272,
+          300,
+          349
+        ],
+        "cited_clause_ids": [
+          264,
+          310,
+          272,
+          300,
+          349
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q15",
+        "category": "multi_clause",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          264,
+          265
+        ],
+        "context_clause_ids": [
+          275,
+          273,
+          280,
+          278,
+          319
+        ],
+        "cited_clause_ids": [
+          275,
+          273,
+          280,
+          278,
+          319
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q16",
+        "category": "multi_clause",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          267,
+          269
+        ],
+        "context_clause_ids": [
+          280,
+          270,
+          268,
+          282,
+          273
+        ],
+        "cited_clause_ids": [
+          280,
+          270,
+          268,
+          282,
+          273
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q17",
+        "category": "multi_clause",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          398,
+          399,
+          400
+        ],
+        "context_clause_ids": [
+          397,
+          396,
+          261,
+          265,
+          263
+        ],
+        "cited_clause_ids": [
+          397,
+          396,
+          261,
+          265,
+          263
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q18",
+        "category": "cross_document",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          391,
+          399
+        ],
+        "context_clause_ids": [
+          399,
+          391,
+          266,
+          293,
+          260
+        ],
+        "cited_clause_ids": [
+          399,
+          391,
+          266,
+          293,
+          260
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 1.0,
+        "context_precision": 0.4,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q19",
+        "category": "cross_document",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          392,
+          400
+        ],
+        "context_clause_ids": [
+          293,
+          266,
+          261,
+          262,
+          281
+        ],
+        "cited_clause_ids": [
+          293,
+          266,
+          261,
+          262,
+          281
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q20",
+        "category": "out_of_scope",
+        "expect_no_result": true,
+        "expected_clause_ids": [],
+        "context_clause_ids": [
+          288,
+          289,
+          279
+        ],
+        "cited_clause_ids": [
+          288,
+          289,
+          279
+        ],
+        "grounded": true,
+        "context_used": 3,
+        "context_recall": null,
+        "context_precision": null,
+        "correctly_ungrounded": false,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q21",
+        "category": "out_of_scope",
+        "expect_no_result": true,
+        "expected_clause_ids": [],
+        "context_clause_ids": [],
+        "cited_clause_ids": [],
+        "grounded": false,
+        "context_used": 0,
+        "context_recall": null,
+        "context_precision": null,
+        "correctly_ungrounded": true,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q22",
+        "category": "out_of_scope",
+        "expect_no_result": true,
+        "expected_clause_ids": [],
+        "context_clause_ids": [
+          398,
+          390,
+          355,
+          395
+        ],
+        "cited_clause_ids": [
+          398,
+          390,
+          355,
+          395
+        ],
+        "grounded": true,
+        "context_used": 4,
+        "context_recall": null,
+        "context_precision": null,
+        "correctly_ungrounded": false,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q23",
+        "category": "absent_from_corpus",
+        "expect_no_result": true,
+        "expected_clause_ids": [],
+        "context_clause_ids": [
+          356,
+          277,
+          275,
+          278,
+          280
+        ],
+        "cited_clause_ids": [
+          356,
+          277,
+          275,
+          278,
+          280
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": null,
+        "context_precision": null,
+        "correctly_ungrounded": false,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q24",
+        "category": "absent_from_corpus",
+        "expect_no_result": true,
+        "expected_clause_ids": [],
+        "context_clause_ids": [
+          324,
+          401,
+          289,
+          288,
+          366
+        ],
+        "cited_clause_ids": [
+          324,
+          401,
+          289,
+          288,
+          366
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": null,
+        "context_precision": null,
+        "correctly_ungrounded": false,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q25",
+        "category": "absent_from_corpus",
+        "expect_no_result": true,
+        "expected_clause_ids": [],
+        "context_clause_ids": [
+          399,
+          293,
+          391,
+          260,
+          284
+        ],
+        "cited_clause_ids": [
+          399,
+          293,
+          391,
+          260,
+          284
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": null,
+        "context_precision": null,
+        "correctly_ungrounded": false,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q26",
+        "category": "absent_from_corpus",
+        "expect_no_result": true,
+        "expected_clause_ids": [],
+        "context_clause_ids": [
+          392,
+          260,
+          293,
+          262,
+          269
+        ],
+        "cited_clause_ids": [
+          392,
+          260,
+          293,
+          262,
+          269
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": null,
+        "context_precision": null,
+        "correctly_ungrounded": false,
+        "citations_subset_of_context": true
+      }
+    ]
+  },
+  "hybrid": {
+    "method": "hybrid",
+    "scored_case_count": 19,
+    "no_result_case_count": 7,
+    "context_recall": 0.47368421052631576,
+    "context_precision": 0.10526315789473684,
+    "grounded_rate": 1.0,
+    "ungrounded_rate": 0.14285714285714285,
+    "citation_integrity_rate": 1.0,
+    "by_category": {
+      "absent_from_corpus": {
+        "scored_case_count": 0,
+        "no_result_case_count": 4,
+        "context_recall": null,
+        "context_precision": null,
+        "grounded_rate": null,
+        "ungrounded_rate": 0.0,
+        "citation_integrity_rate": 1.0
+      },
+      "cross_document": {
+        "scored_case_count": 2,
+        "no_result_case_count": 0,
+        "context_recall": 0.5,
+        "context_precision": 0.2,
+        "grounded_rate": 1.0,
+        "ungrounded_rate": null,
+        "citation_integrity_rate": 1.0
+      },
+      "direct": {
+        "scored_case_count": 12,
+        "no_result_case_count": 0,
+        "context_recall": 0.5833333333333334,
+        "context_precision": 0.11666666666666665,
+        "grounded_rate": 1.0,
+        "ungrounded_rate": null,
+        "citation_integrity_rate": 1.0
+      },
+      "multi_clause": {
+        "scored_case_count": 3,
+        "no_result_case_count": 0,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "grounded_rate": 1.0,
+        "ungrounded_rate": null,
+        "citation_integrity_rate": 1.0
+      },
+      "out_of_scope": {
+        "scored_case_count": 0,
+        "no_result_case_count": 3,
+        "context_recall": null,
+        "context_precision": null,
+        "grounded_rate": null,
+        "ungrounded_rate": 0.3333333333333333,
+        "citation_integrity_rate": 1.0
+      },
+      "paraphrase": {
+        "scored_case_count": 2,
+        "no_result_case_count": 0,
+        "context_recall": 0.5,
+        "context_precision": 0.1,
+        "grounded_rate": 1.0,
+        "ungrounded_rate": null,
+        "citation_integrity_rate": 1.0
+      }
+    },
+    "cases": [
+      {
+        "id": "q01",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          263
+        ],
+        "context_clause_ids": [
+          263,
+          272,
+          266,
+          261,
+          285
+        ],
+        "cited_clause_ids": [
+          263,
+          272,
+          266,
+          261,
+          285
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 1.0,
+        "context_precision": 0.2,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q02",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          266
+        ],
+        "context_clause_ids": [
+          266,
+          267,
+          269,
+          263,
+          268
+        ],
+        "cited_clause_ids": [
+          266,
+          267,
+          269,
+          263,
+          268
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 1.0,
+        "context_precision": 0.2,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q03",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          285
+        ],
+        "context_clause_ids": [
+          262,
+          266,
+          285,
+          261,
+          260
+        ],
+        "cited_clause_ids": [
+          262,
+          266,
+          285,
+          261,
+          260
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 1.0,
+        "context_precision": 0.2,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q04",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          389
+        ],
+        "context_clause_ids": [
+          389,
+          388,
+          393,
+          394,
+          392
+        ],
+        "cited_clause_ids": [
+          389,
+          388,
+          393,
+          394,
+          392
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 1.0,
+        "context_precision": 0.2,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q05",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          390
+        ],
+        "context_clause_ids": [
+          389,
+          393,
+          392,
+          388,
+          394
+        ],
+        "cited_clause_ids": [
+          389,
+          393,
+          392,
+          388,
+          394
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q06",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          391
+        ],
+        "context_clause_ids": [
+          389,
+          388,
+          394,
+          261,
+          393
+        ],
+        "cited_clause_ids": [
+          389,
+          388,
+          394,
+          261,
+          393
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q07",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          392
+        ],
+        "context_clause_ids": [
+          389,
+          392,
+          388,
+          393,
+          394
+        ],
+        "cited_clause_ids": [
+          389,
+          392,
+          388,
+          393,
+          394
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 1.0,
+        "context_precision": 0.2,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q08",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          397
+        ],
+        "context_clause_ids": [
+          397,
+          396,
+          401,
+          288,
+          287
+        ],
+        "cited_clause_ids": [
+          397,
+          396,
+          401,
+          288,
+          287
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 1.0,
+        "context_precision": 0.2,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q09",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          399
+        ],
+        "context_clause_ids": [
+          397,
+          396,
+          401,
+          261,
+          262
+        ],
+        "cited_clause_ids": [
+          397,
+          396,
+          401,
+          261,
+          262
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q10",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          400
+        ],
+        "context_clause_ids": [
+          396,
+          397,
+          401,
+          288,
+          303
+        ],
+        "cited_clause_ids": [
+          396,
+          397,
+          401,
+          288,
+          303
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q11",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          401
+        ],
+        "context_clause_ids": [
+          396,
+          397,
+          401,
+          261,
+          265
+        ],
+        "cited_clause_ids": [
+          396,
+          397,
+          401,
+          261,
+          265
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 1.0,
+        "context_precision": 0.2,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q12",
+        "category": "direct",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          356
+        ],
+        "context_clause_ids": [
+          355,
+          268,
+          277,
+          270,
+          273
+        ],
+        "cited_clause_ids": [
+          355,
+          268,
+          277,
+          270,
+          273
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q13",
+        "category": "paraphrase",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          263
+        ],
+        "context_clause_ids": [
+          272,
+          261,
+          266,
+          263,
+          285
+        ],
+        "cited_clause_ids": [
+          272,
+          261,
+          266,
+          263,
+          285
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 1.0,
+        "context_precision": 0.2,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q14",
+        "category": "paraphrase",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          356
+        ],
+        "context_clause_ids": [
+          319,
+          330,
+          329,
+          267,
+          349
+        ],
+        "cited_clause_ids": [
+          319,
+          330,
+          329,
+          267,
+          349
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q15",
+        "category": "multi_clause",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          264,
+          265
+        ],
+        "context_clause_ids": [
+          273,
+          275,
+          280,
+          274,
+          276
+        ],
+        "cited_clause_ids": [
+          273,
+          275,
+          280,
+          274,
+          276
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q16",
+        "category": "multi_clause",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          267,
+          269
+        ],
+        "context_clause_ids": [
+          270,
+          280,
+          277,
+          282,
+          275
+        ],
+        "cited_clause_ids": [
+          270,
+          280,
+          277,
+          282,
+          275
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q17",
+        "category": "multi_clause",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          398,
+          399,
+          400
+        ],
+        "context_clause_ids": [
+          396,
+          397,
+          265,
+          401,
+          269
+        ],
+        "cited_clause_ids": [
+          396,
+          397,
+          265,
+          401,
+          269
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q18",
+        "category": "cross_document",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          391,
+          399
+        ],
+        "context_clause_ids": [
+          266,
+          399,
+          391,
+          261,
+          262
+        ],
+        "cited_clause_ids": [
+          266,
+          399,
+          391,
+          261,
+          262
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 1.0,
+        "context_precision": 0.4,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q19",
+        "category": "cross_document",
+        "expect_no_result": false,
+        "expected_clause_ids": [
+          392,
+          400
+        ],
+        "context_clause_ids": [
+          266,
+          261,
+          293,
+          262,
+          260
+        ],
+        "cited_clause_ids": [
+          266,
+          261,
+          293,
+          262,
+          260
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": 0.0,
+        "context_precision": 0.0,
+        "correctly_ungrounded": null,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q20",
+        "category": "out_of_scope",
+        "expect_no_result": true,
+        "expected_clause_ids": [],
+        "context_clause_ids": [
+          288,
+          289,
+          287,
+          279,
+          290
+        ],
+        "cited_clause_ids": [
+          288,
+          289,
+          287,
+          279,
+          290
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": null,
+        "context_precision": null,
+        "correctly_ungrounded": false,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q21",
+        "category": "out_of_scope",
+        "expect_no_result": true,
+        "expected_clause_ids": [],
+        "context_clause_ids": [],
+        "cited_clause_ids": [],
+        "grounded": false,
+        "context_used": 0,
+        "context_recall": null,
+        "context_precision": null,
+        "correctly_ungrounded": true,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q22",
+        "category": "out_of_scope",
+        "expect_no_result": true,
+        "expected_clause_ids": [],
+        "context_clause_ids": [
+          390,
+          398,
+          395,
+          355,
+          274
+        ],
+        "cited_clause_ids": [
+          390,
+          398,
+          395,
+          355,
+          274
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": null,
+        "context_precision": null,
+        "correctly_ungrounded": false,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q23",
+        "category": "absent_from_corpus",
+        "expect_no_result": true,
+        "expected_clause_ids": [],
+        "context_clause_ids": [
+          275,
+          277,
+          278,
+          280,
+          274
+        ],
+        "cited_clause_ids": [
+          275,
+          277,
+          278,
+          280,
+          274
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": null,
+        "context_precision": null,
+        "correctly_ungrounded": false,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q24",
+        "category": "absent_from_corpus",
+        "expect_no_result": true,
+        "expected_clause_ids": [],
+        "context_clause_ids": [
+          401,
+          324,
+          314,
+          319,
+          402
+        ],
+        "cited_clause_ids": [
+          401,
+          324,
+          314,
+          319,
+          402
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": null,
+        "context_precision": null,
+        "correctly_ungrounded": false,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q25",
+        "category": "absent_from_corpus",
+        "expect_no_result": true,
+        "expected_clause_ids": [],
+        "context_clause_ids": [
+          266,
+          293,
+          262,
+          261,
+          281
+        ],
+        "cited_clause_ids": [
+          266,
+          293,
+          262,
+          261,
+          281
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": null,
+        "context_precision": null,
+        "correctly_ungrounded": false,
+        "citations_subset_of_context": true
+      },
+      {
+        "id": "q26",
+        "category": "absent_from_corpus",
+        "expect_no_result": true,
+        "expected_clause_ids": [],
+        "context_clause_ids": [
+          266,
+          293,
+          260,
+          300,
+          392
+        ],
+        "cited_clause_ids": [
+          266,
+          293,
+          260,
+          300,
+          392
+        ],
+        "grounded": true,
+        "context_used": 5,
+        "context_recall": null,
+        "context_precision": null,
+        "correctly_ungrounded": false,
+        "citations_subset_of_context": true
+      }
+    ]
+  }
+}

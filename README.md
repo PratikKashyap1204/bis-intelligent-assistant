@@ -1,139 +1,106 @@
 # BIS Intelligent Assistant
 
-AI-powered Intelligent Assistant for Indian Standards and BIS Services for Industries and Consumers.
+AI-powered assistant for questions about BIS Quality Control Orders and
+related Indian Standard *metadata*, with source-backed answers.
 
-This SIH project will help users ask natural-language questions about BIS standards, product applicability, certification/testing guidance, and related laboratories — with source-backed answers in English and Hindi.
+This is an SIH project. The live corpus is a small **pilot**: freely
+published QCO/circular PDFs plus standard catalogue metadata — **not**
+the paid full text of Indian Standards.
 
-## Current status
+## Current status (Milestones 1–6)
 
-**Foundation only.** This stage provides a minimal FastAPI backend skeleton, project layout, and a health check. No AI, RAG, database, scraper, or frontend yet.
+| Milestone | What shipped |
+|---|---|
+| M1 | Known-URL PDF ingestion, clause parsing, keyword retrieval |
+| M2 | pgvector embeddings (`all-MiniLM-L6-v2`), semantic retrieval |
+| M3 | Grounded RAG, citations, `POST /api/search/answer` |
+| M4 | Optional LLM answers with extractive fallback |
+| M5 | Corpus expansion (3 QCOs), 26-case retrieval evaluation |
+| M6 | Hybrid RRF retrieval, vector cosine-similarity floor, eval-driven defaults |
 
-## Architecture (current)
+**Not included:** frontend, authentication, laboratory/product tables
+(schema exists, tables are empty), Hindi generation, Docker files in
+this repo (local Postgres uses `pgvector/pgvector:pg16`).
+
+## Architecture
 
 ```
-bis-intelligent-assistant/
-├── backend/          # FastAPI application
-│   ├── app/          # Application package
-│   │   ├── api/      # Route modules (future)
-│   │   ├── models/   # Schemas / data models (future)
-│   │   ├── services/ # Business logic (future)
-│   │   └── utils/    # Shared helpers (future)
-│   └── tests/        # Pytest suite
-├── data/             # Local data directories (raw / processed / metadata)
-├── scripts/          # Utility scripts (future)
-├── .env.example      # Sample environment variables
-└── README.md
+known URL → fetcher → pdfplumber → clause parser → PostgreSQL
+         → MiniLM embeddings (pgvector)
+         → keyword | vector | hybrid retrieval
+         → RAG context selection → extractive or optional LLM answer
+         → citations from real Clause rows only (Clause.id is identity)
 ```
 
-The backend exposes `GET /health` and returns `{"status": "ok"}`.
+Public API:
+
+- `GET /health` — process + PostgreSQL connectivity
+- `POST /api/search/answer` — grounded answer (`method`: `vector` default,
+  or `keyword` / `hybrid`)
+
+Default `search()` with no method remains **keyword**. RAG's default
+method remains **vector**: the M7 context evaluation showed vector
+context-recall 0.474 vs keyword 0.158 at `max_context_items=5`. Hybrid
+tied vector and was not selected.
+
+## Live pilot corpus
+
+- 5 standard **metadata** rows (IS 302 Part 1:2024; IS 3513 Parts 1–3:1989; IS 1475 Part 1:2001)
+- 3 QCO/circular **documents** (no standard-body clause text)
+- 144 clauses, 144 embeddings
+- `clause_number` is **not** unique; `Clause.id` is the only stable identity
 
 ## Setup
 
-### 1. Clone / enter the project
-
 ```bash
-cd bis-intelligent-assistant
-```
-
-### 2. Create a virtual environment
-
-```bash
-cd backend
+cd bis-intelligent-assistant/backend
 python3 -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-```
-
-### 3. Install dependencies
-
-```bash
+source .venv/bin/activate
 pip install -r requirements.txt
+cp ../.env.example ../.env   # edit DATABASE_URL if needed
 ```
 
-### 4. Configure environment (optional)
+Postgres must already be running with the `vector` extension (this
+project's local container is `pgvector/pgvector:pg16`). Create tables:
 
 ```bash
-cp ../.env.example ../.env
+python ../scripts/init_db.py
 ```
 
-Edit `.env` as needed. No secrets are required for the foundation stage.
+Ingest + embed (idempotent; unchanged documents keep `Clause.id`):
 
-### 5. Start FastAPI
+```bash
+python ../scripts/ingest_pilot.py
+python ../scripts/ingest_additional_standards.py
+python ../scripts/embed_pilot.py
+```
 
-From the `backend/` directory (with the venv active):
+Run the API from `backend/`:
 
 ```bash
 uvicorn app.main:app --reload --app-dir .
 ```
 
 - Health: http://127.0.0.1:8000/health
-- Interactive docs: http://127.0.0.1:8000/docs
+- Docs: http://127.0.0.1:8000/docs
 
-### 6. Run tests
-
-From the `backend/` directory:
+## Tests (offline, no paid API calls)
 
 ```bash
+export TEST_DATABASE_URL="postgresql+psycopg2://bis_user:change_me@localhost:5432/bis_test"
 pytest
 ```
 
-## What comes later
-
-Modules under `api/`, `models/`, `services/`, and `data/` will grow as we add retrieval, standards matching, certification guidance, and multilingual support — still keeping the design simple and modular for a solo developer.
-
-## RAG answer generation (Milestone 4)
-
-`POST /api/search/answer` retrieves relevant BIS clauses and generates a
-grounded answer with citations, via `RAGService` and a swappable
-`AnswerGenerationProvider` (see `backend/app/services/answer_generation.py`
-and `backend/app/services/rag.py`).
-
-### Provider configuration
-
-Set in `.env` (see `.env.example`):
+## Evaluation (read-only against `bis_db`)
 
 ```bash
-# "extractive" (default): deterministic, offline, no API key, no network calls.
-# "llm": real LLM-backed generation (OpenAI). Falls back to "extractive"
-#        automatically on every request if OPENAI_API_KEY is not set.
-ANSWER_PROVIDER=extractive
-
-# Required only if ANSWER_PROVIDER=llm. Never commit a real key.
-# OPENAI_API_KEY=sk-...
-
-# Optional LLM tuning (defaults shown):
-# LLM_MODEL_NAME=gpt-4o-mini
-# LLM_TEMPERATURE=0.0
-# LLM_MAX_OUTPUT_TOKENS=600
-# LLM_TIMEOUT_SECONDS=20
+python ../scripts/run_retrieval_eval.py --save m7
+python ../scripts/run_rag_eval.py --save m7_rag
 ```
 
-Citation safety: the LLM only ever returns free-form answer text plus a
-list of which `SOURCE_n` context items it used. `RAGService` independently
-maps those ids back to the real retrieval results — the model can never
-manufacture a clause number, page number, standard number, or URL that
-isn't already in the database.
+## Answer generation
 
-### Running the offline test suite
-
-From `backend/` (with the venv active and `TEST_DATABASE_URL` set for the
-PostgreSQL-backed integration tests):
-
-```bash
-pytest
-```
-
-No test makes a real LLM or network call — `LLMAnswerGenerationProvider`
-is exercised via a fake client (see `backend/tests/test_llm_answer_generation.py`).
-
-### Running the real LLM demo (manual, costs money, never run in CI)
-
-```bash
-export OPENAI_API_KEY=sk-...        # only in your shell or local .env — never commit it
-python scripts/llm_rag_demo.py
-```
-
-This script refuses to run (and makes zero network calls) if
-`OPENAI_API_KEY` is not set. When it does run, it makes at most 2 real LLM
-calls: one in-scope pilot question and one deliberately out-of-scope
-question, to demonstrate the system does not fabricate an answer when the
-retrieved BIS material doesn't establish one.
+Default `ANSWER_PROVIDER=extractive` (deterministic, no API key). Set
+`ANSWER_PROVIDER=llm` plus `OPENAI_API_KEY` in **local** `.env` for LLM
+answers; missing key or LLM errors fall back to extractive. Never commit
+keys. Manual paid demo only: `python scripts/llm_rag_demo.py`.

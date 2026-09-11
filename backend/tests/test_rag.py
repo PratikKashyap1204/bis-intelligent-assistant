@@ -258,12 +258,12 @@ def test_answer_contains_citations_matching_database_records(db_session):
         assert citation.document_title == document.title
         assert citation.document_type == "QCO"
         assert citation.clause_number in clause_numbers_in_db
+        assert citation.clause_id in {c.id for c in clauses}
+        matching_clause = next(c for c in clauses if c.id == citation.clause_id)
+        assert matching_clause.clause_number == citation.clause_number
         assert citation.source_url == document.source_url
         assert isinstance(citation.relevance_score, float)
         assert f"[{citation.index}]" in result.answer
-        # The quoted clause text in the answer must match the real clause
-        # content (not something the provider invented).
-        matching_clause = next(c for c in clauses if c.clause_number == citation.clause_number)
         assert matching_clause.content[:50] in result.answer
 
 
@@ -448,6 +448,67 @@ def test_answer_endpoint_returns_grounded_response(db_session, monkeypatch):
     assert body["context_used"] > 0
     assert body["sources"]
     assert "[1]" in body["answer"]
+    for citation in body["citations"]:
+        assert citation.get("clause_id") is not None
+        assert citation["clause_id"] in {c.id for c in _seed_result[2]}
+    for source in body["sources"]:
+        if source.get("clause_text"):
+            assert source.get("clause_id") is not None
+
+
+def test_answer_endpoint_rejects_unknown_method(db_session, monkeypatch):
+    from fastapi.testclient import TestClient
+
+    from app.api import search as search_api
+    from app.db import session as db_session_module
+    from app.main import app
+
+    _, _, _, provider = _seed(db_session)
+    monkeypatch.setattr(search_api, "_vector_provider", provider)
+    monkeypatch.setattr(search_api, "_get_vector_provider", lambda: provider)
+
+    def override_get_db():
+        yield db_session
+
+    app.dependency_overrides[db_session_module.get_db] = override_get_db
+    try:
+        client = TestClient(app)
+        response = client.post(
+            "/api/search/answer",
+            json={"query": "What certification requirements exist?", "method": "semantic"},
+        )
+    finally:
+        app.dependency_overrides.pop(db_session_module.get_db, None)
+
+    assert response.status_code == 400
+    assert "Unknown retrieval method" in response.json()["detail"]
+
+
+def test_answer_endpoint_rejects_blank_and_oversized_query(db_session, monkeypatch):
+    from fastapi.testclient import TestClient
+
+    from app.api import search as search_api
+    from app.db import session as db_session_module
+    from app.main import app
+    from app.schemas.rag import MAX_QUERY_LENGTH
+
+    _, _, _, provider = _seed(db_session)
+    monkeypatch.setattr(search_api, "_vector_provider", provider)
+    monkeypatch.setattr(search_api, "_get_vector_provider", lambda: provider)
+
+    def override_get_db():
+        yield db_session
+
+    app.dependency_overrides[db_session_module.get_db] = override_get_db
+    try:
+        client = TestClient(app)
+        blank = client.post("/api/search/answer", json={"query": "   "})
+        huge = client.post("/api/search/answer", json={"query": "x" * (MAX_QUERY_LENGTH + 1)})
+    finally:
+        app.dependency_overrides.pop(db_session_module.get_db, None)
+
+    assert blank.status_code == 422
+    assert huge.status_code == 422
 
 
 def test_answer_endpoint_insufficient_context_for_unrelated_question(db_session, monkeypatch):

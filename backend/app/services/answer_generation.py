@@ -11,14 +11,11 @@ API layer.
 
 Provider selected for this MVP: ExtractiveAnswerGenerationProvider
 --------------------------------------------------------------------
-No hosted LLM (OpenAI/Anthropic/etc.) is wired into this project's
-configuration (app/config.py only knows about DATABASE_URL and
-EMBEDDING_MODEL_NAME — no LLM API key setting exists), and the brief for
-this milestone explicitly says not to introduce one just for this work.
-So the only generation strategy implemented here is a deterministic,
+The production default (``ANSWER_PROVIDER=extractive``) is a deterministic,
 rule-based, *extractive* generator: it builds an answer strictly by
-quoting/labelling the supplied context items, never adding a single fact
-that isn't present in one of them.
+quoting/labelling the supplied context items, never adding a fact that
+isn't present in one of them. An optional LLM provider exists (Milestone 4)
+behind the same protocol and is used only when ``ANSWER_PROVIDER=llm``.
 
 This is simultaneously:
   - the production default (nothing else is configured), and
@@ -40,9 +37,9 @@ Grounding guarantees (see generate() below):
     so a caller can safely map cited_indices back to real ContextItem
     objects without validating them "just in case" (RAGService still
     defensively re-validates — see RAGService._build_citations).
-  - It appends a fixed, honest scope note on every answer: this
-    assistant's corpus is currently tiny (one Standard + one QCO
-    circular), so it must never be read as covering all BIS standards.
+  - It appends a fixed, honest scope note on every answer describing the
+    current pilot corpus (QCO/circular text plus standard metadata — see
+    CORPUS_SCOPE_NOTE).
 
 Known limitation (documented, not hidden):
   This provider cannot judge *partial* sufficiency (e.g. "the retrieved
@@ -62,8 +59,10 @@ from typing import Any, List, Optional, Protocol, Tuple
 
 CORPUS_SCOPE_NOTE = (
     "Scope note: this assistant currently draws only on a small pilot BIS corpus "
-    "(1 Indian Standard and 1 QCO circular, 129 clauses total). It does not cover "
-    "all BIS standards, and absence of a requirement here does not mean BIS has no "
+    "(5 Indian Standard metadata records and 3 QCO circulars, 144 clauses). "
+    "Ingested clause text comes from those QCO/circular documents, not from the "
+    "full paid text of the Indian Standards themselves. It does not cover all "
+    "BIS standards, and absence of a requirement here does not mean BIS has no "
     "such requirement elsewhere."
 )
 
@@ -101,6 +100,10 @@ class ContextItem:
     source_url: Optional[str]
     relevance_score: float
     retrieval_method: str
+    # Stable identity (Clause.id). Optional so existing test fixtures
+    # that omit it keep working; RAG always fills it from RetrievalResult.
+    clause_id: Optional[int] = None
+    document_id: Optional[int] = None
 
 
 @dataclass

@@ -4,25 +4,39 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+
+MAX_QUERY_LENGTH = 2000
 
 
 class AnswerRequest(BaseModel):
     """Request body for POST /api/search/answer."""
 
-    query: str = Field(..., min_length=1, examples=[
-        "Which appliances require mandatory certification before sale?"
-    ])
+    query: str = Field(
+        ...,
+        min_length=1,
+        max_length=MAX_QUERY_LENGTH,
+        examples=["Which appliances require mandatory certification before sale?"],
+    )
     method: Optional[str] = Field(
         None,
         description=(
             "Retrieval method: 'vector' (default, semantic), 'keyword', "
-            "or 'hybrid' (RRF of keyword + vector). Unset uses RAG's vector default."
+            "or 'hybrid' (RRF of keyword + vector). Unset uses RAG's default."
         ),
         examples=["vector"],
     )
     is_number: Optional[str] = Field(None, description="Optional filter: BIS IS number.")
     clause_type: Optional[str] = Field(None, description="Optional filter: e.g. 'CLAUSE', 'ANNEX'.")
+
+    @field_validator("query")
+    @classmethod
+    def query_must_not_be_blank(cls, value: str) -> str:
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("query must not be blank")
+        return stripped
 
 
 class CitationRead(BaseModel):
@@ -38,6 +52,8 @@ class CitationRead(BaseModel):
     page_number: Optional[int] = None
     source_url: Optional[str] = None
     relevance_score: float
+    clause_id: Optional[int] = None
+    document_id: Optional[int] = None
 
 
 class SourceRead(BaseModel):
@@ -54,6 +70,8 @@ class SourceRead(BaseModel):
     source_url: Optional[str] = None
     relevance_score: float
     relevance_method: str
+    clause_id: Optional[int] = None
+    document_id: Optional[int] = None
 
 
 class AnswerResponse(BaseModel):

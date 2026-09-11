@@ -187,6 +187,13 @@ _DOCUMENT_MUTABLE_FIELDS = (
 )
 
 
+def _ordered_clause_contents_match(existing: list[Clause], incoming: list[RawClause]) -> bool:
+    """True when ordered clause *text* is identical. Never uses clause_number."""
+    if len(existing) != len(incoming):
+        return False
+    return all((row.content or "") == (raw.content or "") for row, raw in zip(existing, incoming))
+
+
 class BISIngestionService:
     """
     Persists RawStandard / RawDocument / RawClause data into PostgreSQL.
@@ -263,10 +270,17 @@ class BISIngestionService:
         ``raw.standard_is_number`` (most recent year wins if there are
         multiple matches).
 
-        If ``clauses`` is provided, ALL existing clauses for this document
-        are replaced with the new set — this keeps re-ingestion idempotent
-        (the same document always ends up with exactly the clauses just
-        parsed, never an ever-growing duplicated set).
+        If ``clauses`` is provided, the document's clause set is aligned
+        with the incoming parse:
+
+        * When the ordered clause *content* is identical to what is
+          already stored, existing ``Clause.id`` values are preserved
+          (rows are updated in place). ``clause_number`` is never used
+          as the match key.
+        * When the parse actually changed (different length or different
+          texts in order), existing clauses for this document are
+          replaced so the stored set matches the new parse exactly —
+          never appended.
 
         Returns:
             (document, created, clauses_written)
@@ -308,27 +322,44 @@ class BISIngestionService:
 
         clauses_written = 0
         if clauses is not None:
-            # Idempotent replace: delete whatever clauses this document
-            # currently has, then write the freshly-parsed set. Re-parsing
-            # the same document never appends duplicates.
-            self.session.query(Clause).filter(
-                Clause.document_id == document.id
-            ).delete(synchronize_session=False)
+            existing_rows = list(
+                self.session.execute(
+                    select(Clause)
+                    .where(Clause.document_id == document.id)
+                    .order_by(Clause.sequence_in_document.asc().nulls_last(), Clause.id.asc())
+                ).scalars()
+            )
+            if _ordered_clause_contents_match(existing_rows, clauses):
+                # Unchanged parse: keep Clause.id so evaluation ground
+                # truth and embeddings stay valid across re-ingestion.
+                for row, raw_clause in zip(existing_rows, clauses):
+                    row.clause_number = raw_clause.clause_number
+                    row.title = raw_clause.title
+                    row.content = raw_clause.content
+                    row.page_number = raw_clause.page_number
+                    row.language = raw_clause.language
+                    row.clause_type = raw_clause.clause_type
+                    row.sequence_in_document = raw_clause.sequence_in_document
+                    clauses_written += 1
+            else:
+                self.session.query(Clause).filter(
+                    Clause.document_id == document.id
+                ).delete(synchronize_session=False)
 
-            for raw_clause in clauses:
-                self.session.add(
-                    Clause(
-                        document_id=document.id,
-                        clause_number=raw_clause.clause_number,
-                        title=raw_clause.title,
-                        content=raw_clause.content,
-                        page_number=raw_clause.page_number,
-                        language=raw_clause.language,
-                        clause_type=raw_clause.clause_type,
-                        sequence_in_document=raw_clause.sequence_in_document,
+                for raw_clause in clauses:
+                    self.session.add(
+                        Clause(
+                            document_id=document.id,
+                            clause_number=raw_clause.clause_number,
+                            title=raw_clause.title,
+                            content=raw_clause.content,
+                            page_number=raw_clause.page_number,
+                            language=raw_clause.language,
+                            clause_type=raw_clause.clause_type,
+                            sequence_in_document=raw_clause.sequence_in_document,
+                        )
                     )
-                )
-                clauses_written += 1
+                    clauses_written += 1
 
             self.session.flush()
 

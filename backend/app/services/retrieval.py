@@ -1,34 +1,19 @@
 """
-BIS retrieval layer (Milestone 1).
+BIS retrieval layer.
 
-This module searches the ingested Standard / Document / Clause tables and
-returns structured hits with provenance. It does NOT generate answers, and
-it does not use embeddings.
-
-How it works today
-------------------
 ``BISRetrievalService.search()`` is the public interface. It delegates to a
-``RetrievalBackend``. The default backend is ``KeywordRetrievalBackend``,
-which matches query tokens against existing text columns with ILIKE and
-scores hits in Python.
-
-How embeddings slot in later (Milestone 2)
-------------------------------------------
-pgvector is NOT available on the current ``postgres:16`` Docker image
-(confirmed: only ``plpgsql`` is installed; ``vector`` is not even in
-``pg_available_extensions``). We therefore do not add vector columns or
-change Docker in this milestone.
-
-When pgvector is added, implement another class with the same
-``RetrievalBackend.search(...)`` method (e.g. ``VectorRetrievalBackend``)
-and pass it into ``BISRetrievalService(session, backend=...)``. Callers of
-``search()`` do not need to change.
+``RetrievalBackend``. The default backend is ``KeywordRetrievalBackend``.
+``method="vector"`` uses pgvector cosine similarity; ``method="hybrid"``
+fuses clause-level keyword hits with vector hits via Reciprocal Rank Fusion.
+Callers that never pass ``method`` keep keyword search (Milestone 1).
 
 Provenance
 ----------
 Clause hits are always loaded via Document → Standard joins, so a clause
 result keeps the Standard → Document → Clause chain. Document hits include
-their parent Standard when ``documents.standard_id`` is set.
+their parent Standard when ``documents.standard_id`` is set. Fusion and
+evaluation use ``Clause.id`` as identity; ``clause_number`` is never a
+unique key.
 """
 
 from __future__ import annotations
@@ -122,6 +107,7 @@ _WEIGHTS = {
 }
 
 DEFAULT_LIMIT = 20
+ALLOWED_RETRIEVAL_METHODS = frozenset({"keyword", "vector", "hybrid"})
 
 
 # ---------------------------------------------------------------------------

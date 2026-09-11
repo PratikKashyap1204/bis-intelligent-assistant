@@ -8,9 +8,11 @@ single grounded question -> answer call, per the Milestone 3 brief.
 
 from __future__ import annotations
 
+import logging
+import time
 from typing import Optional
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -18,7 +20,9 @@ from app.schemas.rag import AnswerRequest, AnswerResponse, CitationRead, SourceR
 from app.services.answer_generation import AnswerGenerationProvider, get_default_answer_provider
 from app.services.embedding_provider import EmbeddingProvider, get_default_embedding_provider
 from app.services.rag import RAGService
-from app.services.retrieval import build_retrieval_service
+from app.services.retrieval import ALLOWED_RETRIEVAL_METHODS, build_retrieval_service
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/search", tags=["search"])
 
@@ -57,12 +61,37 @@ def _build_rag_service(db: Session) -> RAGService:
 
 @router.post("/answer", response_model=AnswerResponse)
 def answer_question(request: AnswerRequest, db: Session = Depends(get_db)) -> AnswerResponse:
+    if request.method is not None and request.method not in ALLOWED_RETRIEVAL_METHODS:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Unknown retrieval method {request.method!r}. "
+                f"Use one of: {', '.join(sorted(ALLOWED_RETRIEVAL_METHODS))}."
+            ),
+        )
+
     rag_service = _build_rag_service(db)
-    result = rag_service.answer(
+    started = time.perf_counter()
+    try:
+        result = rag_service.answer(
+            request.query,
+            method=request.method,
+            is_number=request.is_number,
+            clause_type=request.clause_type,
+        )
+    except KeyError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unknown retrieval method {request.method!r}.",
+        ) from exc
+    latency_ms = (time.perf_counter() - started) * 1000.0
+    logger.info(
+        "answer method=%s context_used=%s grounded=%s latency_ms=%.1f query=%.80s",
+        result.retrieval_method,
+        result.context_used,
+        result.grounded,
+        latency_ms,
         request.query,
-        method=request.method,
-        is_number=request.is_number,
-        clause_type=request.clause_type,
     )
 
     return AnswerResponse(
@@ -82,6 +111,8 @@ def answer_question(request: AnswerRequest, db: Session = Depends(get_db)) -> An
                 source_url=s.source_url,
                 relevance_score=s.relevance.score,
                 relevance_method=s.relevance.method,
+                clause_id=s.clause_id,
+                document_id=s.document_id,
             )
             for s in result.sources
         ],

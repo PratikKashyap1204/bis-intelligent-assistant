@@ -39,6 +39,14 @@ from app.services.answer_generation import AnswerGenerationProvider, ContextItem
 from app.services.retrieval import BISRetrievalService, RetrievalResult
 
 DEFAULT_METHOD = "vector"
+# M7 RAG/context eval on the 26-case M5 dataset (extractive provider,
+# retrieval_limit=10, max_context_items=5):
+#   keyword context_recall=0.158  (standard/document hits occupy the window)
+#   vector  context_recall=0.474
+#   hybrid  context_recall=0.474
+# Ungrounded rate on no-result cases was 0.143 for all three.
+# Vector remains the default: keyword is worse at this operating point;
+# hybrid is not better than vector and is worse on multi-clause retrieval.
 
 
 @dataclass
@@ -82,6 +90,8 @@ class Citation:
     page_number: Optional[int]
     source_url: Optional[str]
     relevance_score: float
+    clause_id: Optional[int] = None
+    document_id: Optional[int] = None
 
 
 @dataclass
@@ -165,6 +175,8 @@ def _to_context_item(index: int, result: RetrievalResult, config: RAGConfig) -> 
         source_url=result.source_url,
         relevance_score=result.relevance.score,
         retrieval_method=result.relevance.method,
+        clause_id=result.clause_id,
+        document_id=result.document_id,
     )
 
 
@@ -180,6 +192,8 @@ def _to_citation(item: ContextItem) -> Citation:
         page_number=item.page_number,
         source_url=item.source_url,
         relevance_score=item.relevance_score,
+        clause_id=item.clause_id,
+        document_id=item.document_id,
     )
 
 
