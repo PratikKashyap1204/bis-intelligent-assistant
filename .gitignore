@@ -48,3 +48,6 @@ yarn-error.log*
 .cache/
 tmp/
 temp/
+
+# Local PostgreSQL dumps (kept on disk, not versioned)
+data/backups/
