@@ -32,13 +32,15 @@
     "                            clause, so it cannot supply a 3rd document).",
     "  out_of_scope         (3) - real-world questions with zero connection to",
     "                            BIS/QCOs/appliances/standards at all.",
-    "  absent_from_corpus   (4) - in-domain BIS questions the corpus does NOT",
+    "  absent_from_corpus   (6) - in-domain BIS questions the corpus does NOT",
     "                            answer: either the standard's own text was",
     "                            never ingested (only the referencing QCO was -",
     "                            see the Standard-vs-QCO-document distinction),",
-    "                            or the referenced QCO/standard was never",
-    "                            ingested at all.",
-    "  TOTAL: 26 cases. Not padded to 30-50 - see MILESTONE_5_REPORT.md."
+    "                            or the referenced QCO/standard/product was never",
+    "                            ingested at all. q27-q28 added in Milestone 9",
+    "                            after confirming stainless/steel/bottles do not",
+    "                            occur in ingested clause or title text.",
+    "  TOTAL: 28 cases. Not padded to 30-50 - see MILESTONE_5_REPORT.md."
   ],
   "cases": [
     {
@@ -299,7 +301,27 @@
       "expected_document_ids": [],
       "expected_standard_ids": [],
       "expect_no_result": true,
-      "rationale": "No Steel and Steel Products QCO document has ever been ingested into this corpus."
+      "rationale": "No Steel and Steel Products QCO document has ever been ingested into this corpus. Token inspection of ingested clause/document/standard text found no occurrence of 'steel'."
+    },
+    {
+      "id": "q27",
+      "category": "absent_from_corpus",
+      "question": "I want to manufacture stainless steel bottles.",
+      "expected_clause_ids": [],
+      "expected_document_ids": [],
+      "expected_standard_ids": [],
+      "expect_no_result": true,
+      "rationale": "Milestone 9 false-positive probe. Token inspection of all ingested clause contents, document titles, and standard numbers/titles found no occurrence of 'stainless', 'steel', or 'bottles'. Keyword retrieval can still match 'manufacture' inside 'manufacturers' in the electrical-appliance QCO; that is not ground truth for this product."
+    },
+    {
+      "id": "q28",
+      "category": "absent_from_corpus",
+      "question": "What BIS certification is required to manufacture stainless steel bottles?",
+      "expected_clause_ids": [],
+      "expected_document_ids": [],
+      "expected_standard_ids": [],
+      "expect_no_result": true,
+      "rationale": "Same corpus inspection as q27. Adding 'certification' (which does occur in ingested QCO text) must not create ground truth: no ingested clause addresses stainless steel bottles."
     }
   ]
 }

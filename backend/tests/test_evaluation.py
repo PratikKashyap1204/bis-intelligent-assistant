@@ -121,6 +121,12 @@ def test_precision_at_k_no_relevant_hits():
 def test_load_real_eval_dataset_succeeds():
     cases = load_eval_dataset()
     assert len(cases) >= 20
+    ids = {case.id for case in cases}
+    assert "q27" in ids
+    assert "q28" in ids
+    bottles = next(case for case in cases if case.id == "q27")
+    assert bottles.expect_no_result is True
+    assert bottles.expected_clause_ids == []
     categories = {c.category for c in cases}
     assert {"direct", "paraphrase", "multi_clause", "cross_document",
             "out_of_scope", "absent_from_corpus"} <= categories

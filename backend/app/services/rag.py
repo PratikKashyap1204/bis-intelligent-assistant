@@ -21,22 +21,33 @@ Context selection (deterministic, configurable via RAGConfig)
    search always returns *something*, even for a completely unrelated
    query, so an absolute "no results" check alone is not enough).
 3. Remove duplicate hits (same standard/document/clause).
-4. Cap to at most ``max_context_items`` items, and cap each item's quoted
+4. Skip hits whose clause_text is empty (non-clause / failed-extract rows
+   must not occupy the RAG window).
+5. Cap to at most ``max_context_items`` items, and cap each item's quoted
    text to ``max_chars_per_clause`` and the running total to
    ``max_total_context_chars`` — always keeping the highest-ranked items
    first and dropping lower-ranked ones once a cap is hit, never the
    reverse.
+6. Corpus-token gate (Milestone 9): if the question contains content
+   tokens that the ingested corpus cannot evidence, discard the selected
+   window and abstain. Retrieval ranking and the 0.30 vector floor are
+   unchanged.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
+import re
+from dataclasses import dataclass
+from typing import Dict, Iterable, List, Optional, Set, Tuple
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.models.clause import Clause
+from app.models.document import Document
+from app.models.standard import Standard
 from app.services.answer_generation import AnswerGenerationProvider, ContextItem
-from app.services.retrieval import BISRetrievalService, RetrievalResult
+from app.services.retrieval import BISRetrievalService, RetrievalResult, tokenize_query
 
 DEFAULT_METHOD = "vector"
 # M7 RAG/context eval on the 26-case M5 dataset (extractive provider,
@@ -71,6 +82,13 @@ class RAGConfig:
     # confidence measure — see known limitations in the final report.
     min_score_keyword: float = 0.0
     min_score_vector: float = 0.30
+    # If True (default), RAG abstains when the question contains content
+    # tokens that never appear in the ingested corpus. This is NOT a
+    # similarity-threshold change: it blocks unsupported-product false
+    # positives (e.g. stainless-steel bottles) that otherwise clear the
+    # 0.30 vector floor or match generic keyword tokens such as
+    # "manufacture"/"certification".
+    corpus_token_gate: bool = True
 
 
 @dataclass
@@ -123,6 +141,161 @@ def _deduplicate(results: List[RetrievalResult]) -> List[RetrievalResult]:
     return deduped
 
 
+_TOKEN_RE = re.compile(r"[A-Za-z0-9]+")
+
+# Extra function/question words ignored by the corpus-token gate. These
+# are not retrieval stopwords — they only decide whether a missing token
+# should force abstention. Keep this list linguistic, not product-specific.
+_GATE_STOPWORDS = frozenset(
+    {
+        "i",
+        "me",
+        "my",
+        "we",
+        "our",
+        "us",
+        "you",
+        "your",
+        "want",
+        "need",
+        "must",
+        "know",
+        "tell",
+        "please",
+        "there",
+        "here",
+        "itself",
+        "regarding",
+        "already",
+        "other",
+        "after",
+        "before",
+        "newly",
+        "included",
+        "including",
+        "applies",
+        "apply",
+        "happens",
+        "happen",
+        "general",
+        "required",
+        "require",
+        "obtain",
+        "defined",
+        "specified",
+        "inside",
+        "currently",
+        "exist",
+        "exists",
+        "as",
+        "if",
+        "not",
+        "no",
+        "any",
+        "some",
+        "all",
+        "also",
+        "only",
+        "just",
+        "it",
+        "its",
+        "their",
+        "them",
+        "they",
+        "had",
+        "has",
+        "have",
+        "will",
+        "may",
+        "shall",
+        "into",
+        "than",
+        "then",
+        "over",
+        "such",
+        "each",
+        "both",
+        "more",
+        "most",
+        "under",
+        "using",
+        "used",
+        "being",
+        "did",
+        "done",
+        "per",
+        "via",
+        "number",
+    }
+)
+
+_LIGHT_SUFFIXES = ("ing", "ed", "es", "s", "tion", "ments", "ment", "ly")
+
+
+def content_query_tokens(query: str) -> List[str]:
+    """Query tokens that can trigger the corpus-token abstention gate."""
+    return [token for token in tokenize_query(query) if token not in _GATE_STOPWORDS]
+
+
+def _stems(token: str) -> List[str]:
+    stems = {token}
+    for suffix in _LIGHT_SUFFIXES:
+        if token.endswith(suffix) and len(token) - len(suffix) >= 4:
+            stems.add(token[: -len(suffix)])
+    return list(stems)
+
+
+def token_is_evidenced(token: str, corpus_tokens: Iterable[str]) -> bool:
+    """
+    True if ``token`` is attested in the corpus, allowing light morphology
+    and prefix/substring matches of length >= 4 (order/orders,
+    published/republished). Does not invent product vocabulary.
+    """
+    pool = corpus_tokens if isinstance(corpus_tokens, set) else set(corpus_tokens)
+    if token in pool:
+        return True
+    for candidate in _stems(token):
+        if candidate in pool:
+            return True
+        if len(candidate) < 4:
+            continue
+        for corpus_token in pool:
+            if len(corpus_token) < 4:
+                continue
+            if (
+                corpus_token.startswith(candidate)
+                or candidate.startswith(corpus_token)
+                or candidate in corpus_token
+                or corpus_token in candidate
+            ):
+                return True
+    return False
+
+
+def unsupported_content_tokens(query: str, corpus_tokens: Set[str]) -> List[str]:
+    """Content tokens from the query that the ingested corpus cannot evidence."""
+    return [
+        token
+        for token in content_query_tokens(query)
+        if not token_is_evidenced(token, corpus_tokens)
+    ]
+
+
+def load_corpus_tokens(session: Session) -> Set[str]:
+    """Tokenise ingested clause text plus standard/document titles (read-only)."""
+    tokens: Set[str] = set()
+    texts: List[Optional[str]] = []
+    texts.extend(session.execute(select(Clause.content)).scalars().all())
+    texts.extend(session.execute(select(Document.title)).scalars().all())
+    texts.extend(session.execute(select(Standard.is_number)).scalars().all())
+    texts.extend(session.execute(select(Standard.title)).scalars().all())
+    for text in texts:
+        if not text:
+            continue
+        tokens.update(match.group(0).lower() for match in _TOKEN_RE.finditer(text))
+    return tokens
+
+
 def _passes_threshold(result: RetrievalResult, config: RAGConfig) -> bool:
     if result.relevance.method == "vector":
         return result.relevance.score >= config.min_score_vector
@@ -147,6 +320,8 @@ def _select_context(
         if len(selected) >= config.max_context_items:
             break
         text = (r.clause_text or "").strip()
+        if not text:
+            continue
         text_len = min(len(text), config.max_chars_per_clause)
         if selected and total_chars + text_len > config.max_total_context_chars:
             # Stop adding lower-ranked items once the total cap would be
@@ -240,6 +415,10 @@ class RAGService:
         )
 
         selected = _select_context(raw_results, self.config)
+        if self.config.corpus_token_gate:
+            corpus_tokens = load_corpus_tokens(self.session)
+            if unsupported_content_tokens(question, corpus_tokens):
+                selected = []
         context_items = [
             _to_context_item(i + 1, result, self.config) for i, result in enumerate(selected)
         ]

@@ -32,8 +32,19 @@ from app.services.bis_ingestion import (
 )
 from app.services.embedding_provider import DeterministicHashEmbeddingProvider
 from app.services.embedding_service import ClauseEmbeddingService
-from app.services.rag import RAGConfig, RAGService
-from app.services.retrieval import BISRetrievalService, VectorRetrievalBackend
+from app.services.rag import (
+    RAGConfig,
+    RAGService,
+    _select_context,
+    token_is_evidenced,
+    unsupported_content_tokens,
+)
+from app.services.retrieval import (
+    BISRetrievalService,
+    RelevanceInfo,
+    RetrievalResult,
+    VectorRetrievalBackend,
+)
 
 # ---------------------------------------------------------------------------
 # Sample pilot-like data: one Standard + one QCO-type document, several
@@ -543,4 +554,55 @@ def test_answer_endpoint_insufficient_context_for_unrelated_question(db_session,
     assert body["grounded"] is False
     assert body["citations"] == []
     assert "does not establish an answer" in body["answer"]
+
+
+def test_empty_clause_text_is_skipped_in_context_selection():
+    empty = RetrievalResult(
+        clause_id=1,
+        clause_text="   ",
+        relevance=RelevanceInfo(score=9.0, method="keyword"),
+    )
+    filled = RetrievalResult(
+        clause_id=2,
+        clause_text="Certification is mandatory for widgets under this QCO.",
+        relevance=RelevanceInfo(score=1.0, method="keyword"),
+    )
+    selected = _select_context([empty, filled], RAGConfig(min_score_keyword=0.0))
+    assert [item.clause_id for item in selected] == [2]
+
+
+def test_token_evidence_allows_morphology_but_not_unrelated_products():
+    corpus = {"manufacturers", "certification", "appliances", "published", "order"}
+    assert token_is_evidenced("manufacturers", corpus)
+    assert token_is_evidenced("orders", corpus)
+    assert token_is_evidenced("republished", corpus)
+    assert not token_is_evidenced("stainless", corpus)
+    assert not token_is_evidenced("bottles", corpus)
+    assert unsupported_content_tokens(
+        "I want to manufacture stainless steel bottles", corpus
+    ) == ["stainless", "steel", "bottles"]
+
+
+def test_corpus_token_gate_abstains_unsupported_product_despite_keyword_hit(db_session):
+    """Generic 'manufacture' overlap must not ground a product absent from the corpus."""
+    _seed(db_session)
+    rag = RAGService(
+        db_session,
+        BISRetrievalService(db_session),
+        ExtractiveAnswerGenerationProvider(),
+        config=RAGConfig(min_score_keyword=0.0),
+    )
+    result = rag.answer("I want to manufacture stainless steel bottles", method="keyword")
+    assert result.grounded is False
+    assert result.context_used == 0
+    assert result.citations == []
+    assert "does not establish an answer" in result.answer
+
+
+def test_corpus_token_gate_does_not_block_in_scope_certification_question(db_session):
+    _, _, _, provider = _seed(db_session)
+    rag = _rag_service(db_session, provider)
+    result = rag.answer("What certification requirements exist for appliances?")
+    assert result.grounded is True
+    assert result.context_used > 0
 
