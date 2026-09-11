@@ -128,6 +128,11 @@ class RetrievalResult:
     standard_title: Optional[str] = None
     document_id: Optional[int] = None
     document_title: Optional[str] = None
+    # e.g. "STANDARD", "QCO", "AMENDMENT" — see DocumentType. Added in
+    # Milestone 3 so RAG citations can distinguish a BIS Standard from a
+    # QCO/circular. Optional/defaulted so existing Milestone 1/2 callers
+    # that construct RetrievalResult without it are unaffected.
+    document_type: Optional[str] = None
     clause_id: Optional[int] = None
     clause_number: Optional[str] = None
     clause_type: Optional[str] = None
@@ -315,6 +320,7 @@ class KeywordRetrievalBackend:
                     standard_title=standard.title if standard is not None else None,
                     document_id=document.id,
                     document_title=document.title,
+                    document_type=document.document_type,
                     source_url=document.source_url or (
                         standard.source_url if standard is not None else None
                     ),
@@ -376,6 +382,7 @@ class KeywordRetrievalBackend:
                     standard_title=standard.title if standard is not None else None,
                     document_id=document.id if document is not None else None,
                     document_title=document.title if document is not None else None,
+                    document_type=document.document_type if document is not None else None,
                     clause_id=clause_row.id,
                     clause_number=clause_row.clause_number,
                     clause_type=clause_row.clause_type,
@@ -476,6 +483,7 @@ class VectorRetrievalBackend:
                     standard_title=standard.title if standard is not None else None,
                     document_id=document.id if document is not None else None,
                     document_title=document.title if document is not None else None,
+                    document_type=document.document_type if document is not None else None,
                     clause_id=clause.id if clause is not None else None,
                     clause_number=clause.clause_number if clause is not None else None,
                     clause_type=clause.clause_type if clause is not None else None,
