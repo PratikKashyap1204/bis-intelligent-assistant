@@ -36,5 +36,15 @@ class Settings:
         "postgresql+psycopg2://bis_user:change_me@localhost:5432/bis_db",
     )
 
+    # ------------------------------------------------------------------
+    # Embeddings (Milestone 2)
+    # ------------------------------------------------------------------
+    # Local sentence-transformers model — no API key needed. Overridable so
+    # a future multilingual model can be swapped in via configuration alone
+    # (e.g. sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2).
+    EMBEDDING_MODEL_NAME: str = os.getenv(
+        "EMBEDDING_MODEL_NAME", "sentence-transformers/all-MiniLM-L6-v2"
+    )
+
 
 settings = Settings()

@@ -35,14 +35,16 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from typing import Optional, Protocol
+from typing import Dict, Optional, Protocol
 
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.clause import Clause
 from app.models.document import Document
+from app.models.embedding import ClauseEmbedding
 from app.models.standard import Standard
+from app.services.embedding_provider import EmbeddingProvider
 
 # Common function words. "is" is intentionally NOT in this list so a query
 # like "IS 302" still keeps the "IS" token.
@@ -389,6 +391,106 @@ class KeywordRetrievalBackend:
 
 
 # ---------------------------------------------------------------------------
+# Vector backend (Milestone 2)
+# ---------------------------------------------------------------------------
+
+class VectorRetrievalBackend:
+    """
+    Semantic search over ClauseEmbedding rows using pgvector cosine distance.
+
+    Implements the same RetrievalBackend contract as KeywordRetrievalBackend,
+    so BISRetrievalService.search() does not need to change to use it.
+
+    Only searches at clause granularity (embeddings are stored per-clause —
+    see app/models/embedding.py). Standard/document-only hits are a keyword
+    backend concept; vector search always returns clause-level hits with
+    full Standard -> Document -> Clause provenance attached.
+    """
+
+    method = "vector"
+
+    def __init__(self, session: Session, provider: EmbeddingProvider):
+        self.session = session
+        self.provider = provider
+
+    def search(
+        self,
+        query: str,
+        filters: SearchFilters,
+        limit: int,
+    ) -> list[RetrievalResult]:
+        if not query or not query.strip():
+            return []
+
+        query_vector = self.provider.generate(query)
+
+        distance = ClauseEmbedding.embedding.cosine_distance(query_vector)
+        stmt = (
+            select(ClauseEmbedding, distance.label("distance"))
+            .join(Clause, ClauseEmbedding.clause_id == Clause.id)
+            .join(Document, ClauseEmbedding.document_id == Document.id)
+            .outerjoin(Standard, ClauseEmbedding.standard_id == Standard.id)
+            .where(ClauseEmbedding.model_name == self.provider.model_name)
+            .options(
+                joinedload(ClauseEmbedding.clause),
+                joinedload(ClauseEmbedding.document),
+                joinedload(ClauseEmbedding.standard),
+            )
+        )
+
+        if filters.is_number:
+            stmt = stmt.where(Standard.is_number.ilike(_ilike(filters.is_number), escape="\\"))
+        if filters.year is not None:
+            stmt = stmt.where(Standard.year == filters.year)
+        if filters.document_id is not None:
+            stmt = stmt.where(Document.id == filters.document_id)
+        if filters.language:
+            stmt = stmt.where(
+                or_(Clause.language == filters.language, Document.language == filters.language)
+            )
+        if filters.clause_type:
+            stmt = stmt.where(Clause.clause_type == filters.clause_type)
+
+        stmt = stmt.order_by(distance).limit(limit)
+
+        results: list[RetrievalResult] = []
+        for row in self.session.execute(stmt).unique().all():
+            emb: ClauseEmbedding = row[0]
+            cosine_distance = float(row[1])
+            similarity = 1.0 - cosine_distance  # pgvector cosine_distance == 1 - cosine_similarity
+
+            clause = emb.clause
+            document = emb.document
+            standard = emb.standard
+
+            source_url = None
+            if document is not None and document.source_url:
+                source_url = document.source_url
+            elif standard is not None:
+                source_url = standard.source_url
+
+            results.append(
+                RetrievalResult(
+                    standard_id=standard.id if standard is not None else None,
+                    standard_number=standard.is_number if standard is not None else None,
+                    standard_title=standard.title if standard is not None else None,
+                    document_id=document.id if document is not None else None,
+                    document_title=document.title if document is not None else None,
+                    clause_id=clause.id if clause is not None else None,
+                    clause_number=clause.clause_number if clause is not None else None,
+                    clause_type=clause.clause_type if clause is not None else None,
+                    clause_text=clause.content if clause is not None else None,
+                    page_number=clause.page_number if clause is not None else None,
+                    source_url=source_url,
+                    relevance=RelevanceInfo(
+                        score=similarity, method=self.method, matched_fields=["embedding"]
+                    ),
+                )
+            )
+        return results
+
+
+# ---------------------------------------------------------------------------
 # Public service
 # ---------------------------------------------------------------------------
 
@@ -396,17 +498,22 @@ class BISRetrievalService:
     """
     Search ingested BIS data.
 
-    ``search()`` is the stable API. Swap ``backend`` to change keyword
-    matching for vector search later without rewriting callers.
+    ``search()`` is the stable API. The default backend is keyword search
+    (unchanged from Milestone 1). Pass ``backends={"vector": VectorRetrievalBackend(...)}``
+    and call ``search(..., method="vector")`` to use semantic search —
+    existing callers that never pass ``method`` are unaffected.
     """
 
     def __init__(
         self,
         session: Session,
         backend: Optional[RetrievalBackend] = None,
+        backends: Optional[Dict[str, RetrievalBackend]] = None,
     ):
         self.session = session
         self.backend: RetrievalBackend = backend or KeywordRetrievalBackend(session)
+        self.backends: Dict[str, RetrievalBackend] = dict(backends or {})
+        self.backends.setdefault("keyword", self.backend)
 
     def search(
         self,
@@ -418,13 +525,21 @@ class BISRetrievalService:
         language: Optional[str] = None,
         clause_type: Optional[str] = None,
         limit: int = DEFAULT_LIMIT,
+        method: Optional[str] = None,
     ) -> list[RetrievalResult]:
         """
         Return ranked retrieval hits for ``query``.
 
-        Filters are ANDed with the keyword match and only use columns that
-        already exist. Unknown / unset fields on a hit are left as None.
+        Filters are ANDed with the match and only use columns that already
+        exist. Unknown / unset fields on a hit are left as None.
+
+        ``method``: which registered backend to use ("keyword" is always
+        registered; "vector" if one was supplied via ``backends``). Leaving
+        it unset uses the default backend passed to ``__init__`` — existing
+        callers from Milestone 1 do not need to change.
         """
+        backend = self.backends[method] if method is not None else self.backend
+
         filters = SearchFilters(
             is_number=is_number,
             year=year,
@@ -432,4 +547,4 @@ class BISRetrievalService:
             language=language,
             clause_type=clause_type,
         )
-        return self.backend.search(query, filters, limit)
+        return backend.search(query, filters, limit)

@@ -51,6 +51,7 @@ def db_session(pg_engine: Engine) -> Session:
     """
     from app.models.clause import Clause
     from app.models.document import Document
+    from app.models.embedding import ClauseEmbedding
     from app.models.standard import Standard
 
     TestSessionLocal = sessionmaker(bind=pg_engine)
@@ -59,6 +60,10 @@ def db_session(pg_engine: Engine) -> Session:
         yield session
     finally:
         session.rollback()
+        # ClauseEmbedding rows also cascade-delete via FK ON DELETE CASCADE
+        # when their Clause/Document is deleted, but deleting explicitly
+        # first keeps cleanup order obvious and safe if that ever changes.
+        session.query(ClauseEmbedding).delete()
         session.query(Clause).delete()
         session.query(Document).delete()
         session.query(Standard).delete()

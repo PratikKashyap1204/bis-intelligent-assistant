@@ -9,6 +9,10 @@ psycopg2-binary>=2.9.0   # PostgreSQL driver (binary wheel, no compilation neede
 # BIS document ingestion
 pdfplumber>=0.11.0       # PDF text extraction, page by page
 
+# Semantic / vector retrieval (Milestone 2)
+pgvector>=0.3.0                          # SQLAlchemy <-> pgvector column type
+sentence-transformers>=3.0.0,<6.0.0      # Local embedding model (no external API/cost)
+
 # Configuration
 python-dotenv>=1.0.0
 

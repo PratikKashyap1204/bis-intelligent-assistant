@@ -19,6 +19,7 @@ from app.models.laboratory import Laboratory  # noqa: F401
 from app.models.certification import CertificationRequirement  # noqa: F401
 from app.models.hallmarking import HallmarkingRequirement  # noqa: F401
 from app.models.relationship import EntityRelationship, RelationshipType  # noqa: F401
+from app.models.embedding import ClauseEmbedding  # noqa: F401
 
 __all__ = [
     "Product",
@@ -33,4 +34,5 @@ __all__ = [
     "HallmarkingRequirement",
     "EntityRelationship",
     "RelationshipType",
+    "ClauseEmbedding",
 ]
