@@ -15,7 +15,10 @@ class AnswerRequest(BaseModel):
     ])
     method: Optional[str] = Field(
         None,
-        description="Retrieval method to use: 'vector' (default, semantic) or 'keyword'.",
+        description=(
+            "Retrieval method: 'vector' (default, semantic), 'keyword', "
+            "or 'hybrid' (RRF of keyword + vector). Unset uses RAG's vector default."
+        ),
         examples=["vector"],
     )
     is_number: Optional[str] = Field(None, description="Optional filter: BIS IS number.")

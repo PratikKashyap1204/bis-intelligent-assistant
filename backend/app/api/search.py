@@ -18,7 +18,7 @@ from app.schemas.rag import AnswerRequest, AnswerResponse, CitationRead, SourceR
 from app.services.answer_generation import AnswerGenerationProvider, get_default_answer_provider
 from app.services.embedding_provider import EmbeddingProvider, get_default_embedding_provider
 from app.services.rag import RAGService
-from app.services.retrieval import BISRetrievalService, VectorRetrievalBackend
+from app.services.retrieval import build_retrieval_service
 
 router = APIRouter(prefix="/api/search", tags=["search"])
 
@@ -51,9 +51,7 @@ def _get_answer_provider() -> AnswerGenerationProvider:
 
 def _build_rag_service(db: Session) -> RAGService:
     vector_provider = _get_vector_provider()
-    retrieval_service = BISRetrievalService(
-        db, backends={"vector": VectorRetrievalBackend(db, vector_provider)}
-    )
+    retrieval_service = build_retrieval_service(db, vector_provider)
     return RAGService(db, retrieval_service, _get_answer_provider())
 
 

@@ -19,10 +19,11 @@ absent_from_corpus, see the dataset's ``expect_no_result`` flag):
     (0/0) — instead these cases contribute to a separate "correctly
     abstained" rate: did the backend return zero results, or did it
     return results anyway (which, for a keyword backend that found no
-    term matches, is usually correctly empty; for a vector backend,
-    which always returns its nearest neighbours regardless of true
-    relevance, this exposes exactly the known limitation documented in
-    RAGConfig.min_score_vector). These cases are EXCLUDED from the
+    term matches, is usually correctly empty; for a vector backend with
+    ``min_similarity=None``, which returns nearest neighbours regardless
+    of true relevance). With a cosine-similarity floor
+    (``VectorRetrievalBackend.min_similarity``) vector search can return
+    [] when every neighbour is below that floor. These cases are EXCLUDED from the
     Recall@K/Precision@K averages (see ``EvaluationReport`` — reported
     separately) rather than silently forced into a misleading number.
 """
@@ -277,7 +278,7 @@ def run_evaluation(
 ) -> EvaluationReport:
     """
     Run every case in ``cases`` against ``retrieval_service`` using the
-    given ``method`` ("keyword" or "vector") and compute Recall@K /
+    given ``method`` ("keyword", "vector", or "hybrid") and compute Recall@K /
     Precision@K. Pure read-only queries against the existing DB — makes
     no LLM/API calls and mutates nothing.
     """

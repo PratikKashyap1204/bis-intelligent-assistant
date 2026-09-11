@@ -2,8 +2,8 @@
 Milestone 5: offline retrieval evaluation runner.
 
 Runs data/eval/retrieval_eval_dataset.json against the REAL database
-using BOTH existing retrieval backends (keyword, vector) — no LLM, no
-external API calls, read-only DB queries only.
+using keyword, vector (evaluated cosine-similarity floor), and hybrid
+(RRF) backends — no LLM, no external API calls, read-only DB queries only.
 
 Usage:
     python scripts/run_retrieval_eval.py [--save baseline|after]
@@ -31,7 +31,7 @@ load_dotenv(PROJECT_ROOT / ".env")
 from app.db.session import SessionLocal  # noqa: E402
 from app.services.embedding_provider import get_default_embedding_provider  # noqa: E402
 from app.services.evaluation import DEFAULT_K_VALUES, EvaluationReport, load_eval_dataset, run_evaluation  # noqa: E402
-from app.services.retrieval import BISRetrievalService, VectorRetrievalBackend  # noqa: E402
+from app.services.retrieval import build_retrieval_service  # noqa: E402
 
 REPORTS_DIR = PROJECT_ROOT / "data" / "eval" / "reports"
 
@@ -103,12 +103,10 @@ def main() -> int:
     session = SessionLocal()
     try:
         vector_provider = get_default_embedding_provider()
-        retrieval_service = BISRetrievalService(
-            session, backends={"vector": VectorRetrievalBackend(session, vector_provider)}
-        )
+        retrieval_service = build_retrieval_service(session, vector_provider)
 
         reports = {}
-        for method in ("keyword", "vector"):
+        for method in ("keyword", "vector", "hybrid"):
             report = run_evaluation(
                 session, retrieval_service, cases, method=method, k_values=DEFAULT_K_VALUES
             )

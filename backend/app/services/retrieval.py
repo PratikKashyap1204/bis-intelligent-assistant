@@ -34,8 +34,8 @@ their parent Standard when ``documents.standard_id`` is set.
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
-from typing import Dict, Optional, Protocol
+from dataclasses import dataclass, field, replace
+from typing import Dict, List, Optional, Protocol, Sequence, Tuple
 
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session, joinedload
@@ -443,9 +443,24 @@ class VectorRetrievalBackend:
 
     method = "vector"
 
-    def __init__(self, session: Session, provider: EmbeddingProvider):
+    def __init__(
+        self,
+        session: Session,
+        provider: EmbeddingProvider,
+        min_similarity: Optional[float] = None,
+    ):
         self.session = session
         self.provider = provider
+        # Optional abstention cutoff on cosine *similarity*
+        # (``relevance.score`` = 1 - pgvector cosine_distance).
+        # ``None`` preserves Milestone 2/5 behaviour: always return the
+        # nearest neighbours, even for unrelated queries. A numeric value
+        # drops hits whose similarity is strictly below the cutoff; if
+        # every neighbour is below it, search returns [] rather than a
+        # list of weakly related clauses. The cutoff is NOT a calibrated
+        # confidence — it is a similarity floor evaluated on the M5
+        # dataset (see scripts/run_m6_sweep.py).
+        self.min_similarity = min_similarity
 
     def search(
         self,
@@ -497,6 +512,9 @@ class VectorRetrievalBackend:
             document = emb.document
             standard = emb.standard
 
+            if self.min_similarity is not None and similarity < self.min_similarity:
+                continue
+
             source_url = None
             if document is not None and document.source_url:
                 source_url = document.source_url
@@ -523,6 +541,230 @@ class VectorRetrievalBackend:
                 )
             )
         return results
+
+
+# ---------------------------------------------------------------------------
+# Hybrid retrieval (Milestone 6)
+# ---------------------------------------------------------------------------
+#
+# Keyword scores are unbounded weighted term-match sums; vector scores are
+# cosine similarity in [-1, 1]. Those scales are not commensurate, so the
+# default fusion is Reciprocal Rank Fusion (RRF; Cormack, Clarke &
+# Buettcher 2009): each backend contributes 1/(rrf_k + rank), independent
+# of raw score magnitude. Weighted min-max fusion is implemented as a
+# comparison option for offline sweeps, not as the production default.
+#
+# Identity for fusion is Clause.id when present. Standard-/document-only
+# keyword hits (clause_id is None) keep a separate key so they are not
+# collapsed onto a clause that happens to share a clause_number.
+# clause_number and sequence_in_document are never used as fusion keys.
+
+DEFAULT_RRF_K = 60
+DEFAULT_HYBRID_CANDIDATE_LIMIT = 50
+
+# Cosine *similarity* floor (relevance.score = 1 - pgvector cosine_distance).
+# This is not a calibrated confidence. M5/M6 sweep on the unchanged
+# evaluation dataset (scripts/run_m6_sweep.py):
+#   None / 0.20 / 0.25: Recall@1/3/5/10 unchanged; abstention 0.000
+#   0.30: Recall@1/3/5/10 unchanged vs unthresholded vector;
+#         abstention 0.000 -> 0.143 (1/7 no-result cases: q21)
+#   0.35: abstention 0.429 (all 3 out-of-scope) but Recall@10 0.579 -> 0.526
+# Absent-from-corpus questions score 0.50-0.59, overlapping in-scope
+# top-1 scores, so no floor can reject them without also dropping
+# legitimate questions. VectorRetrievalBackend default remains None
+# (Milestone 2/5 always-return neighbours). Production wiring uses 0.30
+# via build_retrieval_service().
+EVALUATED_VECTOR_MIN_COSINE_SIMILARITY = 0.30
+
+
+def retrieval_identity_key(result: RetrievalResult) -> Tuple:
+    """Stable fusion key. Clause.id is the identity when the hit is a clause."""
+    if result.clause_id is not None:
+        return ("clause", result.clause_id)
+    if result.document_id is not None:
+        return ("document", result.document_id)
+    return ("standard", result.standard_id)
+
+
+def minmax_normalize(values: Sequence[float]) -> List[float]:
+    """Scale values to [0, 1]. A constant list maps to 1.0 if > 0 else 0.0."""
+    if not values:
+        return []
+    lo, hi = min(values), max(values)
+    if hi == lo:
+        return [1.0 if v > 0 else 0.0 for v in values]
+    return [(v - lo) / (hi - lo) for v in values]
+
+
+def reciprocal_rank_fusion(
+    rankings: Sequence[Sequence[RetrievalResult]],
+    rrf_k: int = DEFAULT_RRF_K,
+    method: str = "hybrid",
+) -> List[RetrievalResult]:
+    """
+    Fuse one or more already-ranked result lists with RRF.
+
+    ``rrf_k`` is the standard RRF constant (typically 60). Larger values
+    flatten the rank curve; smaller values emphasise top ranks more.
+    """
+    if rrf_k < 1:
+        raise ValueError(f"rrf_k must be >= 1, got {rrf_k}")
+
+    scores: Dict[Tuple, float] = {}
+    best: Dict[Tuple, RetrievalResult] = {}
+    sources: Dict[Tuple, List[str]] = {}
+
+    for ranking in rankings:
+        for rank, hit in enumerate(ranking, start=1):
+            key = retrieval_identity_key(hit)
+            scores[key] = scores.get(key, 0.0) + 1.0 / (rrf_k + rank)
+            sources.setdefault(key, [])
+            src = hit.relevance.method
+            if src not in sources[key]:
+                sources[key].append(src)
+            if key not in best:
+                best[key] = hit
+
+    ordered = sorted(scores.items(), key=lambda kv: kv[1], reverse=True)
+    fused: List[RetrievalResult] = []
+    for key, score in ordered:
+        hit = best[key]
+        fused.append(
+            replace(
+                hit,
+                relevance=RelevanceInfo(
+                    score=score,
+                    method=method,
+                    matched_fields=list(sources[key]),
+                ),
+            )
+        )
+    return fused
+
+
+def weighted_minmax_fusion(
+    rankings: Sequence[Tuple[Sequence[RetrievalResult], float]],
+    method: str = "hybrid",
+) -> List[RetrievalResult]:
+    """
+    Min-max-normalise each ranking's scores independently, then take a
+    weighted sum. A hit missing from a ranking contributes 0 from that
+    ranking. Weights should sum to 1.0 but are not enforced (offline
+    sweep tool).
+    """
+    scores: Dict[Tuple, float] = {}
+    best: Dict[Tuple, RetrievalResult] = {}
+    sources: Dict[Tuple, List[str]] = {}
+
+    for ranking, weight in rankings:
+        if not ranking:
+            continue
+        raw_scores = [hit.relevance.score for hit in ranking]
+        norms = minmax_normalize(raw_scores)
+        for hit, norm in zip(ranking, norms):
+            key = retrieval_identity_key(hit)
+            scores[key] = scores.get(key, 0.0) + weight * norm
+            sources.setdefault(key, [])
+            src = hit.relevance.method
+            if src not in sources[key]:
+                sources[key].append(src)
+            if key not in best:
+                best[key] = hit
+
+    ordered = sorted(scores.items(), key=lambda kv: kv[1], reverse=True)
+    fused: List[RetrievalResult] = []
+    for key, score in ordered:
+        hit = best[key]
+        fused.append(
+            replace(
+                hit,
+                relevance=RelevanceInfo(
+                    score=score,
+                    method=method,
+                    matched_fields=list(sources[key]),
+                ),
+            )
+        )
+    return fused
+
+
+class HybridRetrievalBackend:
+    """
+    Combines KeywordRetrievalBackend and VectorRetrievalBackend.
+
+    Does not replace either backend. ``method="keyword"`` and
+    ``method="vector"`` on BISRetrievalService remain the standalone
+    implementations. This class is registered separately as
+    ``method="hybrid"``.
+
+    Fusion is Reciprocal Rank Fusion over *clause-level* keyword hits and
+    vector hits. Keyword standard-/document-only rows are appended after
+    the fused clause ranking so they cannot occupy RRF slots.
+    """
+
+    method = "hybrid"
+
+    def __init__(
+        self,
+        keyword_backend: KeywordRetrievalBackend,
+        vector_backend: VectorRetrievalBackend,
+        *,
+        rrf_k: int = DEFAULT_RRF_K,
+        fusion: str = "rrf",
+        keyword_weight: float = 0.5,
+        vector_weight: float = 0.5,
+        candidate_limit: int = DEFAULT_HYBRID_CANDIDATE_LIMIT,
+    ):
+        if fusion not in ("rrf", "weighted"):
+            raise ValueError(f"Unknown fusion mode: {fusion!r}")
+        self.keyword_backend = keyword_backend
+        self.vector_backend = vector_backend
+        self.rrf_k = rrf_k
+        self.fusion = fusion
+        self.keyword_weight = keyword_weight
+        self.vector_weight = vector_weight
+        self.candidate_limit = candidate_limit
+
+    def search(
+        self,
+        query: str,
+        filters: SearchFilters,
+        limit: int,
+    ) -> list[RetrievalResult]:
+        if not query or not query.strip():
+            return []
+
+        pool = max(limit, self.candidate_limit)
+        keyword_hits = self.keyword_backend.search(query, filters, pool)
+        vector_hits = self.vector_backend.search(query, filters, pool)
+
+        # Fuse at clause identity only. Keyword standard-/document-only
+        # hits (clause_id is None) are a different granularity from
+        # clause embeddings; putting them in the same RRF list lets a
+        # document-title match occupy a rank slot against a clause and
+        # buried complementary clause hits (M6 eval: R@10 0.658 -> 0.711
+        # with no change to R@1/3/5 when those hits are excluded from
+        # fusion). They are appended after fused clauses so provenance
+        # is preserved and evaluation (which ignores clause_id=None)
+        # is unaffected.
+        keyword_clauses = [h for h in keyword_hits if h.clause_id is not None]
+        keyword_non_clause = [h for h in keyword_hits if h.clause_id is None]
+
+        if self.fusion == "weighted":
+            fused = weighted_minmax_fusion(
+                [
+                    (keyword_clauses, self.keyword_weight),
+                    (vector_hits, self.vector_weight),
+                ],
+                method=self.method,
+            )
+        else:
+            fused = reciprocal_rank_fusion(
+                [keyword_clauses, vector_hits],
+                rrf_k=self.rrf_k,
+                method=self.method,
+            )
+        return (fused + keyword_non_clause)[:limit]
 
 
 # ---------------------------------------------------------------------------
@@ -569,9 +811,9 @@ class BISRetrievalService:
         exist. Unknown / unset fields on a hit are left as None.
 
         ``method``: which registered backend to use ("keyword" is always
-        registered; "vector" if one was supplied via ``backends``). Leaving
-        it unset uses the default backend passed to ``__init__`` — existing
-        callers from Milestone 1 do not need to change.
+        registered; "vector" / "hybrid" if supplied via ``backends``).
+        Leaving it unset uses the default backend passed to ``__init__``
+        — existing callers from Milestone 1 do not need to change.
         """
         backend = self.backends[method] if method is not None else self.backend
 
@@ -583,3 +825,33 @@ class BISRetrievalService:
             clause_type=clause_type,
         )
         return backend.search(query, filters, limit)
+
+
+def build_retrieval_service(
+    session: Session,
+    provider: EmbeddingProvider,
+    *,
+    vector_min_similarity: Optional[float] = EVALUATED_VECTOR_MIN_COSINE_SIMILARITY,
+    rrf_k: int = DEFAULT_RRF_K,
+) -> BISRetrievalService:
+    """
+    Construct a service with keyword, vector, and hybrid backends.
+
+    Default search (no ``method=``) remains keyword. ``method="vector"``
+    uses the evaluated cosine-similarity floor unless the caller passes
+    ``vector_min_similarity=None`` to restore Milestone 2/5 unthresholded
+    nearest-neighbour behaviour. ``method="hybrid"`` is Reciprocal Rank
+    Fusion (rrf_k=60) over clause-level keyword hits and the same vector
+    backend. RAG's default method stays "vector"; this helper does not
+    change that.
+    """
+    keyword = KeywordRetrievalBackend(session)
+    vector = VectorRetrievalBackend(
+        session, provider, min_similarity=vector_min_similarity
+    )
+    hybrid = HybridRetrievalBackend(keyword, vector, rrf_k=rrf_k, fusion="rrf")
+    return BISRetrievalService(
+        session,
+        backend=keyword,
+        backends={"keyword": keyword, "vector": vector, "hybrid": hybrid},
+    )
