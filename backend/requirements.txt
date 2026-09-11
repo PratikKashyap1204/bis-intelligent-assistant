@@ -13,6 +13,11 @@ pdfplumber>=0.11.0       # PDF text extraction, page by page
 pgvector>=0.3.0                          # SQLAlchemy <-> pgvector column type
 sentence-transformers>=3.0.0,<6.0.0      # Local embedding model (no external API/cost)
 
+# LLM-backed answer generation (Milestone 4) — only used if ANSWER_PROVIDER=llm
+# and OPENAI_API_KEY is set; imported lazily, so it's not required at runtime
+# when the default "extractive" provider is used.
+openai>=1.0.0
+
 # Configuration
 python-dotenv>=1.0.0
 

@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.schemas.rag import AnswerRequest, AnswerResponse, CitationRead, SourceRead
-from app.services.answer_generation import ExtractiveAnswerGenerationProvider
+from app.services.answer_generation import AnswerGenerationProvider, get_default_answer_provider
 from app.services.embedding_provider import EmbeddingProvider, get_default_embedding_provider
 from app.services.rag import RAGService
 from app.services.retrieval import BISRetrievalService, VectorRetrievalBackend
@@ -28,6 +28,12 @@ router = APIRouter(prefix="/api/search", tags=["search"])
 # to reuse: it only wraps read-only model inference calls.
 _vector_provider: Optional[EmbeddingProvider] = None
 
+# The answer provider (extractive or LLM, per ANSWER_PROVIDER — see
+# app/config.py and app/services/answer_generation.py) is likewise cached
+# per-process: for the LLM provider this avoids re-reading configuration
+# on every request; for the extractive provider it's stateless anyway.
+_answer_provider: Optional[AnswerGenerationProvider] = None
+
 
 def _get_vector_provider() -> EmbeddingProvider:
     global _vector_provider
@@ -36,12 +42,19 @@ def _get_vector_provider() -> EmbeddingProvider:
     return _vector_provider
 
 
+def _get_answer_provider() -> AnswerGenerationProvider:
+    global _answer_provider
+    if _answer_provider is None:
+        _answer_provider = get_default_answer_provider()
+    return _answer_provider
+
+
 def _build_rag_service(db: Session) -> RAGService:
-    provider = _get_vector_provider()
+    vector_provider = _get_vector_provider()
     retrieval_service = BISRetrievalService(
-        db, backends={"vector": VectorRetrievalBackend(db, provider)}
+        db, backends={"vector": VectorRetrievalBackend(db, vector_provider)}
     )
-    return RAGService(db, retrieval_service, ExtractiveAnswerGenerationProvider())
+    return RAGService(db, retrieval_service, _get_answer_provider())
 
 
 @router.post("/answer", response_model=AnswerResponse)

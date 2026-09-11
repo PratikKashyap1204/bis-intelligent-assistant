@@ -9,6 +9,7 @@ Add new settings here as the project grows.  Never hardcode secrets.
 
 import os
 from pathlib import Path
+from typing import Optional
 
 from dotenv import load_dotenv
 
@@ -45,6 +46,29 @@ class Settings:
     EMBEDDING_MODEL_NAME: str = os.getenv(
         "EMBEDDING_MODEL_NAME", "sentence-transformers/all-MiniLM-L6-v2"
     )
+
+    # ------------------------------------------------------------------
+    # Answer generation (Milestone 4)
+    # ------------------------------------------------------------------
+    # "extractive" (default): deterministic, offline, no API key needed —
+    # see app/services/answer_generation.py:ExtractiveAnswerGenerationProvider.
+    # "llm": real LLM-backed generation — see LLMAnswerGenerationProvider.
+    # If "llm" is selected but OPENAI_API_KEY is not set, the LLM provider
+    # transparently falls back to the extractive provider on every call
+    # (never crashes, never requires a key just to run the app).
+    ANSWER_PROVIDER: str = os.getenv("ANSWER_PROVIDER", "extractive")
+
+    # Never hardcode credentials — read only from the environment. Left
+    # unset (None) unless the user's own .env defines it; .env is
+    # git-ignored and never committed.
+    OPENAI_API_KEY: Optional[str] = os.getenv("OPENAI_API_KEY") or None
+
+    LLM_MODEL_NAME: str = os.getenv("LLM_MODEL_NAME", "gpt-4o-mini")
+    # Low temperature for a factual/regulatory assistant — minimizes
+    # creative deviation from the supplied grounding context.
+    LLM_TEMPERATURE: float = float(os.getenv("LLM_TEMPERATURE", "0.0"))
+    LLM_MAX_OUTPUT_TOKENS: int = int(os.getenv("LLM_MAX_OUTPUT_TOKENS", "600"))
+    LLM_TIMEOUT_SECONDS: float = float(os.getenv("LLM_TIMEOUT_SECONDS", "20"))
 
 
 settings = Settings()
