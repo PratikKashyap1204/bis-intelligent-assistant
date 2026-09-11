@@ -127,3 +127,50 @@ def test_empty_pages_produce_no_clauses():
     clauses = parse_pages_to_clauses(pages)
 
     assert clauses == []
+
+
+# ---------------------------------------------------------------------------
+# Milestone 5: sequence_in_document (additive disambiguation metadata).
+#
+# Real BIS documents reuse plain clause numbers across independently
+# numbered lists/sections within ONE document (observed empirically: the
+# Milestone 1 pilot QCO circular has clause_number "1" appearing 5 times
+# across pages 2, 6, 8, and 13). clause_number alone cannot disambiguate
+# these; sequence_in_document (assigned here, in document order) can.
+# ---------------------------------------------------------------------------
+
+
+def test_sequence_in_document_is_assigned_in_document_order():
+    pages = [(1, "1. First clause\n2. Second clause\n3. Third clause")]
+
+    clauses = parse_pages_to_clauses(pages)
+
+    assert [c.sequence_in_document for c in clauses] == [1, 2, 3]
+
+
+def test_repeated_clause_numbers_get_distinct_sequence_in_document():
+    # Two independently-numbered lists in the same document both restart
+    # at "1" — a real, observed pattern, not a hypothetical edge case.
+    pages = [
+        (1, "1. First list, item one\n2. First list, item two"),
+        (2, "1. Second list, item one\n2. Second list, item two"),
+    ]
+
+    clauses = parse_pages_to_clauses(pages)
+
+    numbers = [c.clause_number for c in clauses]
+    sequences = [c.sequence_in_document for c in clauses]
+    assert numbers == ["1", "2", "1", "2"]
+    # clause_number collides, but sequence_in_document is unique and ordered.
+    assert sequences == [1, 2, 3, 4]
+    assert len(set(sequences)) == len(sequences)
+
+
+def test_sequence_in_document_starts_at_one_even_with_preamble():
+    pages = [(1, "Some preamble text with no heading.\n1. First real clause")]
+
+    clauses = parse_pages_to_clauses(pages)
+
+    assert clauses[0].clause_type == CLAUSE_TYPE_PREAMBLE
+    assert clauses[0].sequence_in_document == 1
+    assert clauses[1].sequence_in_document == 2

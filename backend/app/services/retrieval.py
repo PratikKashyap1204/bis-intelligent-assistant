@@ -71,6 +71,14 @@ _STOPWORDS = frozenset(
         "how",
         "does",
         "do",
+        # Milestone 5: added after the retrieval evaluation showed
+        # "Who won the FIFA World Cup in 2022?" (an out-of-scope
+        # question with zero real relevance) matching clause_text on
+        # BOTH real "Penalty for contravention... Any person WHO
+        # contravenes..." clauses (ids 392, 400) purely via the token
+        # "who" — a common English function word that was simply missing
+        # from this list (unlike the other wh-words already above).
+        "who",
         "with",
         "from",
         "by",
@@ -87,6 +95,20 @@ _STOPWORDS = frozenset(
 )
 
 _TOKEN_RE = re.compile(r"[A-Za-z0-9]+")
+
+# Milestone 5: terms tokenize_query() must still RETURN (so "IS 302" stays
+# ["is", "302"] — see test_tokenize_query_drops_stopwords_keeps_is_number_tokens)
+# but that carry ~zero discriminative signal on their own for SCORING.
+# The retrieval evaluation showed the bare token "is" alone — present in
+# nearly every natural-language English question — matching is_number/
+# standard_title on EVERY standard (every is_number literally starts with
+# "IS "), producing false-positive top hits (score 15-16) for completely
+# unrelated questions (e.g. "What is the scope defined by IS 3513...",
+# "What are the certification requirements under the Toys QCO?"). Unlike
+# tokenize_query's stopword list (which controls what counts as a query
+# term at all — kept permissive on purpose for "IS 302"-style queries),
+# this set only controls what may contribute to a match SCORE.
+_LOW_SIGNAL_SCORING_TERMS = frozenset({"is"})
 
 # Weights for keyword scoring. Exact identity fields rank above body text.
 _WEIGHTS = {
@@ -199,8 +221,13 @@ def _ilike(term: str) -> str:
 def _score_fields(field_values: dict[str, Optional[str]], terms: list[str]) -> tuple[float, list[str]]:
     score = 0.0
     matched: list[str] = []
+    # See _LOW_SIGNAL_SCORING_TERMS: these terms are still valid query
+    # tokens (e.g. for the SQL candidate-selection WHERE clause) but must
+    # not, on their own, cause a field to be counted as "matched" or
+    # contribute to the score — a real, higher-signal term still can.
+    scoring_terms = [t for t in terms if t not in _LOW_SIGNAL_SCORING_TERMS]
     for field_name, value in field_values.items():
-        hits = sum(1 for term in terms if _contains(value, term))
+        hits = sum(1 for term in scoring_terms if _contains(value, term))
         if hits:
             score += _WEIGHTS.get(field_name, 1.0) * hits
             matched.append(field_name)

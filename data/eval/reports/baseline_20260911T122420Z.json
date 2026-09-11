@@ -1,0 +1,1860 @@
+{
+  "keyword": {
+    "method": "keyword",
+    "k_values": [
+      1,
+      3,
+      5,
+      10
+    ],
+    "scored_case_count": 19,
+    "no_result_case_count": 7,
+    "recall_at_k": {
+      "1": 0.21052631578947367,
+      "3": 0.3684210526315789,
+      "5": 0.543859649122807,
+      "10": 0.543859649122807
+    },
+    "precision_at_k": {
+      "1": 0.21052631578947367,
+      "3": 0.16666666666666666,
+      "5": 0.19210526315789472,
+      "10": 0.17355889724310777
+    },
+    "abstention_rate": 0.0,
+    "by_category": {
+      "absent_from_corpus": {
+        "scored_case_count": 0,
+        "no_result_case_count": 4,
+        "recall_at_k": {
+          "1": NaN,
+          "3": NaN,
+          "5": NaN,
+          "10": NaN
+        },
+        "precision_at_k": {
+          "1": NaN,
+          "3": NaN,
+          "5": NaN,
+          "10": NaN
+        },
+        "abstention_rate": 0.0
+      },
+      "cross_document": {
+        "scored_case_count": 2,
+        "no_result_case_count": 0,
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 0.5,
+          "5": 0.5,
+          "10": 0.5
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.3333333333333333,
+          "5": 0.2,
+          "10": 0.14285714285714285
+        },
+        "abstention_rate": null
+      },
+      "direct": {
+        "scored_case_count": 12,
+        "no_result_case_count": 0,
+        "recall_at_k": {
+          "1": 0.3333333333333333,
+          "3": 0.4166666666666667,
+          "5": 0.5833333333333334,
+          "10": 0.5833333333333334
+        },
+        "precision_at_k": {
+          "1": 0.3333333333333333,
+          "3": 0.18055555555555555,
+          "5": 0.19166666666666665,
+          "10": 0.1765873015873016
+        },
+        "abstention_rate": null
+      },
+      "multi_clause": {
+        "scored_case_count": 3,
+        "no_result_case_count": 0,
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.4444444444444444,
+          "10": 0.4444444444444444
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.2333333333333333,
+          "10": 0.21428571428571427
+        },
+        "abstention_rate": null
+      },
+      "out_of_scope": {
+        "scored_case_count": 0,
+        "no_result_case_count": 3,
+        "recall_at_k": {
+          "1": NaN,
+          "3": NaN,
+          "5": NaN,
+          "10": NaN
+        },
+        "precision_at_k": {
+          "1": NaN,
+          "3": NaN,
+          "5": NaN,
+          "10": NaN
+        },
+        "abstention_rate": 0.0
+      },
+      "paraphrase": {
+        "scored_case_count": 2,
+        "no_result_case_count": 0,
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 0.5,
+          "5": 0.5,
+          "10": 0.5
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.16666666666666666,
+          "5": 0.125,
+          "10": 0.125
+        },
+        "abstention_rate": null
+      }
+    },
+    "cases": [
+      {
+        "id": "q01",
+        "category": "direct",
+        "question": "Do manufacturers of electrical appliances need to obtain BIS certification?",
+        "expected_clause_ids": [
+          263
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          263,
+          272,
+          285,
+          261,
+          266,
+          267,
+          269
+        ],
+        "recall_at_k": {
+          "1": 1.0,
+          "3": 1.0,
+          "5": 1.0,
+          "10": 1.0
+        },
+        "precision_at_k": {
+          "1": 1.0,
+          "3": 0.3333333333333333,
+          "5": 0.2,
+          "10": 0.14285714285714285
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q02",
+        "category": "direct",
+        "question": "What was decided regarding grant of licence for the BIS Standard Mark on electrical appliances?",
+        "expected_clause_ids": [
+          266
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          266,
+          267,
+          259,
+          268,
+          269,
+          285,
+          261
+        ],
+        "recall_at_k": {
+          "1": 1.0,
+          "3": 1.0,
+          "5": 1.0,
+          "10": 1.0
+        },
+        "precision_at_k": {
+          "1": 1.0,
+          "3": 0.3333333333333333,
+          "5": 0.2,
+          "10": 0.14285714285714285
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q03",
+        "category": "direct",
+        "question": "Is there a list of electrical appliances already covered under other BIS Quality Control Orders?",
+        "expected_clause_ids": [
+          285
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          262,
+          285
+        ],
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 1.0,
+          "5": 1.0,
+          "10": 1.0
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.5,
+          "5": 0.5,
+          "10": 0.5
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q04",
+        "category": "direct",
+        "question": "What is the short title of the Resin Treated Compressed Wood Laminates Quality Control Order?",
+        "expected_clause_ids": [
+          389
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          389,
+          388
+        ],
+        "recall_at_k": {
+          "1": 1.0,
+          "3": 1.0,
+          "5": 1.0,
+          "10": 1.0
+        },
+        "precision_at_k": {
+          "1": 1.0,
+          "3": 0.5,
+          "5": 0.5,
+          "10": 0.5
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q05",
+        "category": "direct",
+        "question": "Under the Resin Treated Compressed Wood Laminates QCO, what must goods bear and under what licence?",
+        "expected_clause_ids": [
+          390
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          392,
+          389,
+          388,
+          390,
+          393,
+          394
+        ],
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 1.0,
+          "10": 1.0
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.2,
+          "10": 0.16666666666666666
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q06",
+        "category": "direct",
+        "question": "Who is the certifying and enforcing authority for resin treated compressed wood laminates under the 2024 QCO?",
+        "expected_clause_ids": [
+          391
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          261,
+          277,
+          389
+        ],
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q07",
+        "category": "direct",
+        "question": "What is the penalty for contravening the Resin Treated Compressed Wood Laminates Quality Control Order?",
+        "expected_clause_ids": [
+          392
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          388,
+          389
+        ],
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q08",
+        "category": "direct",
+        "question": "What is the short title of the Self-Contained Drinking Water Cooler Quality Control Order?",
+        "expected_clause_ids": [
+          397
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          397,
+          396
+        ],
+        "recall_at_k": {
+          "1": 1.0,
+          "3": 1.0,
+          "5": 1.0,
+          "10": 1.0
+        },
+        "precision_at_k": {
+          "1": 1.0,
+          "3": 0.5,
+          "5": 0.5,
+          "10": 0.5
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q09",
+        "category": "direct",
+        "question": "Who is the certifying and enforcing authority for self-contained drinking water coolers under the 2024 QCO?",
+        "expected_clause_ids": [
+          399
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          261,
+          277,
+          397
+        ],
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q10",
+        "category": "direct",
+        "question": "What is the penalty for contravening the Self-Contained Drinking Water Cooler Quality Control Order?",
+        "expected_clause_ids": [
+          400
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          396,
+          397
+        ],
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q11",
+        "category": "direct",
+        "question": "Which Indian Standard number applies to self-contained drinking water coolers under the 2024 QCO?",
+        "expected_clause_ids": [
+          401
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          261,
+          277,
+          396,
+          397,
+          401,
+          265
+        ],
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 1.0,
+          "10": 1.0
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.2,
+          "10": 0.16666666666666666
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q12",
+        "category": "direct",
+        "question": "What changed in the Scope clause (Cl. 1) of IS 302 (Part 1) in the 2024 revision?",
+        "expected_clause_ids": [
+          356
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          270,
+          277,
+          261,
+          267
+        ],
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q13",
+        "category": "paraphrase",
+        "question": "Is BIS certification mandatory for household electrical appliance manufacturers?",
+        "expected_clause_ids": [
+          263
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          261,
+          272,
+          263,
+          266
+        ],
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 1.0,
+          "5": 1.0,
+          "10": 1.0
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.3333333333333333,
+          "5": 0.25,
+          "10": 0.25
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q14",
+        "category": "paraphrase",
+        "question": "Were battery-operated appliances newly included in the scope of IS 302 (Part 1) after the 2024 revision?",
+        "expected_clause_ids": [
+          356
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          270,
+          277,
+          261,
+          267
+        ],
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q15",
+        "category": "multi_clause",
+        "question": "What was IS 302-1:2008 revised and republished as?",
+        "expected_clause_ids": [
+          264,
+          265
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          270,
+          273,
+          267,
+          265
+        ],
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.5,
+          "10": 0.5
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.25,
+          "10": 0.25
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q16",
+        "category": "multi_clause",
+        "question": "What must new applicants do, and what must existing licensees do, to transition to the revised IS 302 (Part 1):2024 standard?",
+        "expected_clause_ids": [
+          267,
+          269
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          270,
+          261,
+          277,
+          267
+        ],
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.5,
+          "10": 0.5
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.25,
+          "10": 0.25
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q17",
+        "category": "multi_clause",
+        "question": "Under the Self-Contained Drinking Water Cooler QCO, what standard-mark requirement, certifying authority, and penalty apply?",
+        "expected_clause_ids": [
+          398,
+          399,
+          400
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          396,
+          397,
+          401,
+          390,
+          398,
+          265,
+          266
+        ],
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.3333333333333333,
+          "10": 0.3333333333333333
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.2,
+          "10": 0.14285714285714285
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q18",
+        "category": "cross_document",
+        "question": "Who is the certifying and enforcing authority under BIS Quality Control Orders in general?",
+        "expected_clause_ids": [
+          391,
+          399
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          266,
+          259
+        ],
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q19",
+        "category": "cross_document",
+        "question": "What happens to a person who contravenes a BIS Quality Control Order?",
+        "expected_clause_ids": [
+          392,
+          400
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          266,
+          392,
+          400,
+          259,
+          261,
+          286,
+          287
+        ],
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 1.0,
+          "5": 1.0,
+          "10": 1.0
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.6666666666666666,
+          "5": 0.4,
+          "10": 0.2857142857142857
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q20",
+        "category": "out_of_scope",
+        "question": "What is the boiling point of water at sea level in degrees Celsius?",
+        "expected_clause_ids": [],
+        "expect_no_result": true,
+        "retrieved_clause_ids": [
+          287,
+          288,
+          289
+        ],
+        "recall_at_k": {
+          "1": null,
+          "3": null,
+          "5": null,
+          "10": null
+        },
+        "precision_at_k": {
+          "1": null,
+          "3": null,
+          "5": null,
+          "10": null
+        },
+        "correctly_abstained": false
+      },
+      {
+        "id": "q21",
+        "category": "out_of_scope",
+        "question": "Who won the FIFA World Cup in 2022?",
+        "expected_clause_ids": [],
+        "expect_no_result": true,
+        "retrieved_clause_ids": [
+          392,
+          400
+        ],
+        "recall_at_k": {
+          "1": null,
+          "3": null,
+          "5": null,
+          "10": null
+        },
+        "precision_at_k": {
+          "1": null,
+          "3": null,
+          "5": null,
+          "10": null
+        },
+        "correctly_abstained": false
+      },
+      {
+        "id": "q22",
+        "category": "out_of_scope",
+        "question": "How do I file my personal income tax return in India?",
+        "expected_clause_ids": [],
+        "expect_no_result": true,
+        "retrieved_clause_ids": [
+          274,
+          275,
+          285,
+          294,
+          313,
+          388,
+          390,
+          392
+        ],
+        "recall_at_k": {
+          "1": null,
+          "3": null,
+          "5": null,
+          "10": null
+        },
+        "precision_at_k": {
+          "1": null,
+          "3": null,
+          "5": null,
+          "10": null
+        },
+        "correctly_abstained": false
+      },
+      {
+        "id": "q23",
+        "category": "absent_from_corpus",
+        "question": "What is the scope defined by IS 3513 (Part 1):1989 itself?",
+        "expected_clause_ids": [],
+        "expect_no_result": true,
+        "retrieved_clause_ids": [
+          394,
+          393,
+          392,
+          270
+        ],
+        "recall_at_k": {
+          "1": null,
+          "3": null,
+          "5": null,
+          "10": null
+        },
+        "precision_at_k": {
+          "1": null,
+          "3": null,
+          "5": null,
+          "10": null
+        },
+        "correctly_abstained": false
+      },
+      {
+        "id": "q24",
+        "category": "absent_from_corpus",
+        "question": "What are the technical performance requirements specified inside IS 1475 (Part 1):2001 for water coolers?",
+        "expected_clause_ids": [],
+        "expect_no_result": true,
+        "retrieved_clause_ids": [
+          402,
+          268,
+          281
+        ],
+        "recall_at_k": {
+          "1": null,
+          "3": null,
+          "5": null,
+          "10": null
+        },
+        "precision_at_k": {
+          "1": null,
+          "3": null,
+          "5": null,
+          "10": null
+        },
+        "correctly_abstained": false
+      },
+      {
+        "id": "q25",
+        "category": "absent_from_corpus",
+        "question": "What are the certification requirements under the Toys (Quality Control) Order?",
+        "expected_clause_ids": [],
+        "expect_no_result": true,
+        "retrieved_clause_ids": [
+          261,
+          266,
+          389,
+          262,
+          281,
+          286
+        ],
+        "recall_at_k": {
+          "1": null,
+          "3": null,
+          "5": null,
+          "10": null
+        },
+        "precision_at_k": {
+          "1": null,
+          "3": null,
+          "5": null,
+          "10": null
+        },
+        "correctly_abstained": false
+      },
+      {
+        "id": "q26",
+        "category": "absent_from_corpus",
+        "question": "What is the penalty for violating the Steel and Steel Products Quality Control Order?",
+        "expected_clause_ids": [],
+        "expect_no_result": true,
+        "retrieved_clause_ids": [
+          266,
+          286
+        ],
+        "recall_at_k": {
+          "1": null,
+          "3": null,
+          "5": null,
+          "10": null
+        },
+        "precision_at_k": {
+          "1": null,
+          "3": null,
+          "5": null,
+          "10": null
+        },
+        "correctly_abstained": false
+      }
+    ]
+  },
+  "vector": {
+    "method": "vector",
+    "k_values": [
+      1,
+      3,
+      5,
+      10
+    ],
+    "scored_case_count": 19,
+    "no_result_case_count": 7,
+    "recall_at_k": {
+      "1": 0.18421052631578946,
+      "3": 0.42105263157894735,
+      "5": 0.47368421052631576,
+      "10": 0.5789473684210527
+    },
+    "precision_at_k": {
+      "1": 0.21052631578947367,
+      "3": 0.15789473684210523,
+      "5": 0.10526315789473684,
+      "10": 0.06842105263157895
+    },
+    "abstention_rate": 0.0,
+    "by_category": {
+      "absent_from_corpus": {
+        "scored_case_count": 0,
+        "no_result_case_count": 4,
+        "recall_at_k": {
+          "1": NaN,
+          "3": NaN,
+          "5": NaN,
+          "10": NaN
+        },
+        "precision_at_k": {
+          "1": NaN,
+          "3": NaN,
+          "5": NaN,
+          "10": NaN
+        },
+        "abstention_rate": 0.0
+      },
+      "cross_document": {
+        "scored_case_count": 2,
+        "no_result_case_count": 0,
+        "recall_at_k": {
+          "1": 0.25,
+          "3": 0.5,
+          "5": 0.5,
+          "10": 0.75
+        },
+        "precision_at_k": {
+          "1": 0.5,
+          "3": 0.3333333333333333,
+          "5": 0.2,
+          "10": 0.15000000000000002
+        },
+        "abstention_rate": null
+      },
+      "direct": {
+        "scored_case_count": 12,
+        "no_result_case_count": 0,
+        "recall_at_k": {
+          "1": 0.25,
+          "3": 0.5,
+          "5": 0.5833333333333334,
+          "10": 0.6666666666666666
+        },
+        "precision_at_k": {
+          "1": 0.25,
+          "3": 0.16666666666666666,
+          "5": 0.11666666666666665,
+          "10": 0.06666666666666667
+        },
+        "abstention_rate": null
+      },
+      "multi_clause": {
+        "scored_case_count": 3,
+        "no_result_case_count": 0,
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.16666666666666666
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.03333333333333333
+        },
+        "abstention_rate": null
+      },
+      "out_of_scope": {
+        "scored_case_count": 0,
+        "no_result_case_count": 3,
+        "recall_at_k": {
+          "1": NaN,
+          "3": NaN,
+          "5": NaN,
+          "10": NaN
+        },
+        "precision_at_k": {
+          "1": NaN,
+          "3": NaN,
+          "5": NaN,
+          "10": NaN
+        },
+        "abstention_rate": 0.0
+      },
+      "paraphrase": {
+        "scored_case_count": 2,
+        "no_result_case_count": 0,
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 0.5,
+          "5": 0.5,
+          "10": 0.5
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.16666666666666666,
+          "5": 0.1,
+          "10": 0.05
+        },
+        "abstention_rate": null
+      }
+    },
+    "cases": [
+      {
+        "id": "q01",
+        "category": "direct",
+        "question": "Do manufacturers of electrical appliances need to obtain BIS certification?",
+        "expected_clause_ids": [
+          263
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          272,
+          263,
+          266,
+          261,
+          269,
+          285,
+          267,
+          310,
+          337,
+          264
+        ],
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 1.0,
+          "5": 1.0,
+          "10": 1.0
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.3333333333333333,
+          "5": 0.2,
+          "10": 0.1
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q02",
+        "category": "direct",
+        "question": "What was decided regarding grant of licence for the BIS Standard Mark on electrical appliances?",
+        "expected_clause_ids": [
+          266
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          266,
+          272,
+          263,
+          267,
+          269,
+          261,
+          268,
+          310,
+          281,
+          280
+        ],
+        "recall_at_k": {
+          "1": 1.0,
+          "3": 1.0,
+          "5": 1.0,
+          "10": 1.0
+        },
+        "precision_at_k": {
+          "1": 1.0,
+          "3": 0.3333333333333333,
+          "5": 0.2,
+          "10": 0.1
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q03",
+        "category": "direct",
+        "question": "Is there a list of electrical appliances already covered under other BIS Quality Control Orders?",
+        "expected_clause_ids": [
+          285
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          262,
+          266,
+          260,
+          272,
+          285,
+          261,
+          263,
+          296,
+          300,
+          295
+        ],
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 1.0,
+          "10": 1.0
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.2,
+          "10": 0.1
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q04",
+        "category": "direct",
+        "question": "What is the short title of the Resin Treated Compressed Wood Laminates Quality Control Order?",
+        "expected_clause_ids": [
+          389
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          389,
+          393,
+          394,
+          388,
+          392,
+          293,
+          262,
+          260,
+          397,
+          300
+        ],
+        "recall_at_k": {
+          "1": 1.0,
+          "3": 1.0,
+          "5": 1.0,
+          "10": 1.0
+        },
+        "precision_at_k": {
+          "1": 1.0,
+          "3": 0.3333333333333333,
+          "5": 0.2,
+          "10": 0.1
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q05",
+        "category": "direct",
+        "question": "Under the Resin Treated Compressed Wood Laminates QCO, what must goods bear and under what licence?",
+        "expected_clause_ids": [
+          390
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          393,
+          394,
+          389,
+          388,
+          269,
+          392,
+          262,
+          263,
+          285,
+          261
+        ],
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q06",
+        "category": "direct",
+        "question": "Who is the certifying and enforcing authority for resin treated compressed wood laminates under the 2024 QCO?",
+        "expected_clause_ids": [
+          391
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          394,
+          389,
+          388,
+          393,
+          392,
+          262,
+          269,
+          261,
+          263,
+          285
+        ],
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q07",
+        "category": "direct",
+        "question": "What is the penalty for contravening the Resin Treated Compressed Wood Laminates Quality Control Order?",
+        "expected_clause_ids": [
+          392
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          389,
+          392,
+          393,
+          394,
+          388,
+          293,
+          262,
+          400,
+          284,
+          281
+        ],
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 1.0,
+          "5": 1.0,
+          "10": 1.0
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.3333333333333333,
+          "5": 0.2,
+          "10": 0.1
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q08",
+        "category": "direct",
+        "question": "What is the short title of the Self-Contained Drinking Water Cooler Quality Control Order?",
+        "expected_clause_ids": [
+          397
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          397,
+          396,
+          401,
+          288,
+          298,
+          262,
+          303,
+          260,
+          287,
+          293
+        ],
+        "recall_at_k": {
+          "1": 1.0,
+          "3": 1.0,
+          "5": 1.0,
+          "10": 1.0
+        },
+        "precision_at_k": {
+          "1": 1.0,
+          "3": 0.3333333333333333,
+          "5": 0.2,
+          "10": 0.1
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q09",
+        "category": "direct",
+        "question": "Who is the certifying and enforcing authority for self-contained drinking water coolers under the 2024 QCO?",
+        "expected_clause_ids": [
+          399
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          397,
+          396,
+          401,
+          288,
+          262,
+          269,
+          261,
+          263,
+          285,
+          265
+        ],
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q10",
+        "category": "direct",
+        "question": "What is the penalty for contravening the Self-Contained Drinking Water Cooler Quality Control Order?",
+        "expected_clause_ids": [
+          400
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          397,
+          396,
+          401,
+          288,
+          262,
+          392,
+          260,
+          269,
+          261,
+          400
+        ],
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 1.0
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.1
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q11",
+        "category": "direct",
+        "question": "Which Indian Standard number applies to self-contained drinking water coolers under the 2024 QCO?",
+        "expected_clause_ids": [
+          401
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          396,
+          397,
+          401,
+          294,
+          288,
+          265,
+          402,
+          261,
+          275,
+          289
+        ],
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 1.0,
+          "5": 1.0,
+          "10": 1.0
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.3333333333333333,
+          "5": 0.2,
+          "10": 0.1
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q12",
+        "category": "direct",
+        "question": "What changed in the Scope clause (Cl. 1) of IS 302 (Part 1) in the 2024 revision?",
+        "expected_clause_ids": [
+          356
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          275,
+          273,
+          280,
+          355,
+          278,
+          268,
+          276,
+          310,
+          274,
+          281
+        ],
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q13",
+        "category": "paraphrase",
+        "question": "Is BIS certification mandatory for household electrical appliance manufacturers?",
+        "expected_clause_ids": [
+          263
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          272,
+          266,
+          263,
+          261,
+          269,
+          267,
+          285,
+          310,
+          265,
+          264
+        ],
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 1.0,
+          "5": 1.0,
+          "10": 1.0
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.3333333333333333,
+          "5": 0.2,
+          "10": 0.1
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q14",
+        "category": "paraphrase",
+        "question": "Were battery-operated appliances newly included in the scope of IS 302 (Part 1) after the 2024 revision?",
+        "expected_clause_ids": [
+          356
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          264,
+          310,
+          272,
+          300,
+          349,
+          319,
+          354,
+          325,
+          330,
+          343
+        ],
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q15",
+        "category": "multi_clause",
+        "question": "What was IS 302-1:2008 revised and republished as?",
+        "expected_clause_ids": [
+          264,
+          265
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          275,
+          273,
+          280,
+          278,
+          319,
+          264,
+          355,
+          310,
+          276,
+          318
+        ],
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.5
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.1
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q16",
+        "category": "multi_clause",
+        "question": "What must new applicants do, and what must existing licensees do, to transition to the revised IS 302 (Part 1):2024 standard?",
+        "expected_clause_ids": [
+          267,
+          269
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          280,
+          270,
+          268,
+          282,
+          273,
+          281,
+          277,
+          275,
+          373,
+          283
+        ],
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q17",
+        "category": "multi_clause",
+        "question": "Under the Self-Contained Drinking Water Cooler QCO, what standard-mark requirement, certifying authority, and penalty apply?",
+        "expected_clause_ids": [
+          398,
+          399,
+          400
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          397,
+          396,
+          261,
+          265,
+          263,
+          269,
+          262,
+          401,
+          267,
+          285
+        ],
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q18",
+        "category": "cross_document",
+        "question": "Who is the certifying and enforcing authority under BIS Quality Control Orders in general?",
+        "expected_clause_ids": [
+          391,
+          399
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          399,
+          391,
+          266,
+          293,
+          260,
+          261,
+          263,
+          262,
+          272,
+          269
+        ],
+        "recall_at_k": {
+          "1": 0.5,
+          "3": 1.0,
+          "5": 1.0,
+          "10": 1.0
+        },
+        "precision_at_k": {
+          "1": 1.0,
+          "3": 0.6666666666666666,
+          "5": 0.4,
+          "10": 0.2
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q19",
+        "category": "cross_document",
+        "question": "What happens to a person who contravenes a BIS Quality Control Order?",
+        "expected_clause_ids": [
+          392,
+          400
+        ],
+        "expect_no_result": false,
+        "retrieved_clause_ids": [
+          293,
+          266,
+          261,
+          262,
+          281,
+          260,
+          274,
+          269,
+          392,
+          263
+        ],
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.5
+        },
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.1
+        },
+        "correctly_abstained": null
+      },
+      {
+        "id": "q20",
+        "category": "out_of_scope",
+        "question": "What is the boiling point of water at sea level in degrees Celsius?",
+        "expected_clause_ids": [],
+        "expect_no_result": true,
+        "retrieved_clause_ids": [
+          288,
+          289,
+          279,
+          385,
+          322,
+          366,
+          401,
+          324,
+          290,
+          370
+        ],
+        "recall_at_k": {
+          "1": null,
+          "3": null,
+          "5": null,
+          "10": null
+        },
+        "precision_at_k": {
+          "1": null,
+          "3": null,
+          "5": null,
+          "10": null
+        },
+        "correctly_abstained": false
+      },
+      {
+        "id": "q21",
+        "category": "out_of_scope",
+        "question": "Who won the FIFA World Cup in 2022?",
+        "expected_clause_ids": [],
+        "expect_no_result": true,
+        "retrieved_clause_ids": [
+          402,
+          298,
+          300,
+          310,
+          302,
+          349,
+          303,
+          272,
+          291,
+          296
+        ],
+        "recall_at_k": {
+          "1": null,
+          "3": null,
+          "5": null,
+          "10": null
+        },
+        "precision_at_k": {
+          "1": null,
+          "3": null,
+          "5": null,
+          "10": null
+        },
+        "correctly_abstained": false
+      },
+      {
+        "id": "q22",
+        "category": "out_of_scope",
+        "question": "How do I file my personal income tax return in India?",
+        "expected_clause_ids": [],
+        "expect_no_result": true,
+        "retrieved_clause_ids": [
+          398,
+          390,
+          355,
+          395,
+          274,
+          388,
+          273,
+          275,
+          284,
+          294
+        ],
+        "recall_at_k": {
+          "1": null,
+          "3": null,
+          "5": null,
+          "10": null
+        },
+        "precision_at_k": {
+          "1": null,
+          "3": null,
+          "5": null,
+          "10": null
+        },
+        "correctly_abstained": false
+      },
+      {
+        "id": "q23",
+        "category": "absent_from_corpus",
+        "question": "What is the scope defined by IS 3513 (Part 1):1989 itself?",
+        "expected_clause_ids": [],
+        "expect_no_result": true,
+        "retrieved_clause_ids": [
+          356,
+          277,
+          275,
+          278,
+          280,
+          321,
+          374,
+          395,
+          364,
+          274
+        ],
+        "recall_at_k": {
+          "1": null,
+          "3": null,
+          "5": null,
+          "10": null
+        },
+        "precision_at_k": {
+          "1": null,
+          "3": null,
+          "5": null,
+          "10": null
+        },
+        "correctly_abstained": false
+      },
+      {
+        "id": "q24",
+        "category": "absent_from_corpus",
+        "question": "What are the technical performance requirements specified inside IS 1475 (Part 1):2001 for water coolers?",
+        "expected_clause_ids": [],
+        "expect_no_result": true,
+        "retrieved_clause_ids": [
+          324,
+          401,
+          289,
+          288,
+          366,
+          294,
+          319,
+          286,
+          322,
+          396
+        ],
+        "recall_at_k": {
+          "1": null,
+          "3": null,
+          "5": null,
+          "10": null
+        },
+        "precision_at_k": {
+          "1": null,
+          "3": null,
+          "5": null,
+          "10": null
+        },
+        "correctly_abstained": false
+      },
+      {
+        "id": "q25",
+        "category": "absent_from_corpus",
+        "question": "What are the certification requirements under the Toys (Quality Control) Order?",
+        "expected_clause_ids": [],
+        "expect_no_result": true,
+        "retrieved_clause_ids": [
+          399,
+          293,
+          391,
+          260,
+          284,
+          269,
+          263,
+          262,
+          266,
+          272
+        ],
+        "recall_at_k": {
+          "1": null,
+          "3": null,
+          "5": null,
+          "10": null
+        },
+        "precision_at_k": {
+          "1": null,
+          "3": null,
+          "5": null,
+          "10": null
+        },
+        "correctly_abstained": false
+      },
+      {
+        "id": "q26",
+        "category": "absent_from_corpus",
+        "question": "What is the penalty for violating the Steel and Steel Products Quality Control Order?",
+        "expected_clause_ids": [],
+        "expect_no_result": true,
+        "retrieved_clause_ids": [
+          392,
+          260,
+          293,
+          262,
+          269,
+          266,
+          400,
+          389,
+          388,
+          300
+        ],
+        "recall_at_k": {
+          "1": null,
+          "3": null,
+          "5": null,
+          "10": null
+        },
+        "precision_at_k": {
+          "1": null,
+          "3": null,
+          "5": null,
+          "10": null
+        },
+        "correctly_abstained": false
+      }
+    ]
+  }
+}

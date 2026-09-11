@@ -109,6 +109,14 @@ class RawClause:
     page_number: int | None = None
     language: str | None = None
     clause_type: str | None = None
+    # Milestone 5: 1-based position of this clause among all clauses
+    # parsed for the SAME document, in document order. Purely additive
+    # disambiguation/provenance metadata for when ``clause_number`` is not
+    # globally unique within a document (see clause_parser.py) — it does
+    # NOT replace Clause.id as the primary stable identity, and it is
+    # optional so existing callers that build RawClause manually (tests,
+    # older scripts) are unaffected.
+    sequence_in_document: int | None = None
 
 
 @dataclass
@@ -317,6 +325,7 @@ class BISIngestionService:
                         page_number=raw_clause.page_number,
                         language=raw_clause.language,
                         clause_type=raw_clause.clause_type,
+                        sequence_in_document=raw_clause.sequence_in_document,
                     )
                 )
                 clauses_written += 1

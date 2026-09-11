@@ -95,6 +95,11 @@ def parse_pages_to_clauses(
                 page_number=current.page_number,
                 language=language,
                 clause_type=current.clause_type,
+                # Milestone 5: 1-based position in document order. Computed
+                # from the list being built here, so it always matches the
+                # order clauses will be written to the DB in
+                # BISIngestionService.ingest_document — see RawClause.
+                sequence_in_document=len(results) + 1,
             )
         )
 

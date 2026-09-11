@@ -20,6 +20,7 @@ from app.services.retrieval import (
     RelevanceInfo,
     RetrievalResult,
     SearchFilters,
+    _score_fields,
     tokenize_query,
 )
 
@@ -94,6 +95,50 @@ def test_tokenize_query_drops_stopwords_keeps_is_number_tokens():
     assert tokenize_query("IS 302") == ["is", "302"]
     assert tokenize_query("") == []
     assert tokenize_query("   ") == []
+
+
+# ---------------------------------------------------------------------------
+# Milestone 5: keyword scoring fixes discovered via the retrieval
+# evaluation (data/eval/retrieval_eval_dataset.json, questions q19/q21/
+# q23-26) — see app/services/retrieval.py's _STOPWORDS/"who" and
+# _LOW_SIGNAL_SCORING_TERMS/"is" comments for the full rationale.
+# ---------------------------------------------------------------------------
+
+
+def test_tokenize_query_drops_who_as_stopword():
+    # Real evaluation failure: "Who won the FIFA World Cup in 2022?" (an
+    # out-of-scope question) matched real "Any person WHO contravenes..."
+    # clauses purely via the token "who".
+    assert tokenize_query("Who is the certifying authority?") == ["is", "certifying", "authority"]
+    assert "who" not in tokenize_query("Who won the FIFA World Cup in 2022?")
+
+
+def test_score_fields_ignores_bare_is_token():
+    # "is" must still be a token (see IS-302-style query tests above) but
+    # must not, on its own, cause a field to be counted as matched —
+    # otherwise every is_number ("IS ...") "matches" every query that
+    # merely contains the word "is" (i.e. almost all English questions).
+    score, matched = _score_fields({"is_number": "IS 9999"}, ["is"])
+    assert score == 0.0
+    assert matched == []
+
+    # A real, higher-signal term still scores normally alongside "is".
+    score, matched = _score_fields({"is_number": "IS 9999"}, ["is", "9999"])
+    assert score > 0.0
+    assert "is_number" in matched
+
+
+def test_bare_is_token_does_not_falsely_match_unrelated_standard(db_session):
+    _seed(db_session)
+    service = BISRetrievalService(db_session)
+
+    # Genuinely out-of-scope question that happens to contain "is" (as
+    # almost every English question does) must not match the seeded
+    # IS 9999 standard purely because of that.
+    results = service.search("What is the boiling point of water?")
+
+    standard_hits = [r for r in results if r.standard_id is not None and r.clause_id is None]
+    assert standard_hits == []
 
 
 # ---------------------------------------------------------------------------
