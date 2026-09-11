@@ -355,6 +355,7 @@ class RagCaseResult:
     context_precision: Optional[float]
     correctly_ungrounded: Optional[bool]
     citations_subset_of_context: bool
+    evidence_status: str
 
 
 @dataclass
@@ -370,6 +371,10 @@ class RagEvaluationReport:
     grounded_rate: Optional[float]
     ungrounded_rate: Optional[float]
     citation_integrity_rate: float
+    supported_rate: Optional[float]
+    partially_supported_rate: Optional[float]
+    insufficient_rate: Optional[float]
+    out_of_scope_rate: Optional[float]
 
     def by_category(self) -> Dict[str, "RagEvaluationReport"]:
         categories = sorted({cr.case.category for cr in self.case_results})
@@ -408,6 +413,26 @@ def _aggregate_rag(method: str, case_results: List[RagCaseResult]) -> RagEvaluat
             if case_results
             else 1.0
         ),
+        supported_rate=_mean(
+            [1.0 if cr.evidence_status == "supported" else 0.0 for cr in scored]
+        )
+        if scored
+        else None,
+        partially_supported_rate=_mean(
+            [1.0 if cr.evidence_status == "partially_supported" else 0.0 for cr in scored]
+        )
+        if scored
+        else None,
+        insufficient_rate=_mean(
+            [1.0 if cr.evidence_status == "insufficient" else 0.0 for cr in no_result]
+        )
+        if no_result
+        else None,
+        out_of_scope_rate=_mean(
+            [1.0 if cr.evidence_status == "out_of_scope" else 0.0 for cr in no_result]
+        )
+        if no_result
+        else None,
     )
 
 
@@ -425,7 +450,8 @@ def run_rag_evaluation(
     Offline and deterministic: uses ExtractiveAnswerGenerationProvider
     (no LLM, no network). Scores whether gold ``Clause.id`` values appear
     in the selected context window, whether no-result cases stay
-    ungrounded, and whether citations are a subset of that context.
+    ungrounded, whether citations are a subset of that context, and the
+    categorical evidence_status rates (not a numeric confidence score).
     """
     rag = RAGService(
         session,
@@ -459,6 +485,7 @@ def run_rag_evaluation(
                     context_precision=None,
                     correctly_ungrounded=(not answer.grounded),
                     citations_subset_of_context=citations_ok,
+                    evidence_status=answer.evidence_status,
                 )
             )
             continue
@@ -477,6 +504,7 @@ def run_rag_evaluation(
                 context_precision=(hits / len(context_ids)) if context_ids else 0.0,
                 correctly_ungrounded=None,
                 citations_subset_of_context=citations_ok,
+                evidence_status=answer.evidence_status,
             )
         )
 

@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import App from "./App";
-import { groundedFixture, insufficientFixture } from "./test/fixtures";
+import { groundedFixture, insufficientFixture, outOfScopeFixture, partialFixture } from "./test/fixtures";
 
 function jsonResponse(status: number, body: unknown): Promise<Response> {
   return Promise.resolve({
@@ -80,7 +80,7 @@ describe("BIS Intelligent Assistant UI", () => {
     expect(screen.getByRole("button", { name: "Retrieving…" })).toBeDisabled();
     finishAnswer?.(await jsonResponse(200, groundedFixture));
 
-    expect(await screen.findByTestId("answer-panel")).toHaveTextContent("Grounded in retrieved clauses");
+    expect(await screen.findByTestId("answer-panel")).toHaveTextContent("Supported by retrieved clauses");
     expect(screen.getByTestId("citation-card")).toHaveTextContent("Sample QCO Circular");
     expect(screen.getByTestId("citation-card")).toHaveTextContent("Clause ID");
     expect(screen.getByRole("link", { name: "[1]" })).toHaveAttribute("href", "#citation-1");
@@ -115,6 +115,42 @@ describe("BIS Intelligent Assistant UI", () => {
     expect(screen.getByTestId("no-citations")).toHaveTextContent("No citations");
     expect(screen.queryByTestId("citation-card")).not.toBeInTheDocument();
     expect(screen.getByText(/does not establish an answer/i)).toBeInTheDocument();
+  });
+
+  it("shows a partially supported evidence state", async () => {
+    const user = userEvent.setup();
+    mockFetch(async (url) => {
+      if (url.endsWith("/health")) {
+        return jsonResponse(200, { status: "ok", database: "ok" });
+      }
+      return jsonResponse(200, partialFixture);
+    });
+
+    render(<App />);
+    await user.type(screen.getByLabelText("Question"), "What certification and earthing rules apply?");
+    await user.click(screen.getByRole("button", { name: "Ask" }));
+
+    expect(await screen.findByTestId("answer-panel")).toHaveTextContent("Partially supported");
+    expect(screen.getByTestId("partial-banner")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "[1]" })).toHaveAttribute("href", "#citation-1");
+  });
+
+  it("shows an out-of-scope evidence state", async () => {
+    const user = userEvent.setup();
+    mockFetch(async (url) => {
+      if (url.endsWith("/health")) {
+        return jsonResponse(200, { status: "ok", database: "ok" });
+      }
+      return jsonResponse(200, outOfScopeFixture);
+    });
+
+    render(<App />);
+    await user.type(screen.getByLabelText("Question"), "I want to manufacture stainless steel bottles");
+    await user.click(screen.getByRole("button", { name: "Ask" }));
+
+    expect(await screen.findByTestId("answer-panel")).toHaveTextContent("Outside the ingested corpus");
+    expect(screen.getByTestId("insufficient-banner")).toHaveTextContent("outside the ingested BIS corpus");
+    expect(screen.getByTestId("no-citations")).toBeInTheDocument();
   });
 
   it("shows API 500 errors", async () => {

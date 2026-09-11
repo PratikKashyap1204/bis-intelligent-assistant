@@ -46,6 +46,7 @@ export const groundedFixture: AnswerResponse = {
   ],
   grounded: true,
   context_used: 1,
+  evidence_status: "supported",
 };
 
 export const insufficientFixture: AnswerResponse = {
@@ -56,4 +57,20 @@ export const insufficientFixture: AnswerResponse = {
   sources: [],
   grounded: false,
   context_used: 0,
+  evidence_status: "insufficient",
+};
+
+export const partialFixture: AnswerResponse = {
+  ...groundedFixture,
+  answer:
+    "Certification before sale is required [1]. Earthing details for this product are not in the supplied material.",
+  grounded: true,
+  evidence_status: "partially_supported",
+};
+
+export const outOfScopeFixture: AnswerResponse = {
+  ...insufficientFixture,
+  answer:
+    "This question is outside the currently ingested BIS corpus. The available BIS material does not establish an answer to this question because the ingested Standard/QCO content does not cover this topic.",
+  evidence_status: "out_of_scope",
 };

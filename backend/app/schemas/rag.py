@@ -83,3 +83,12 @@ class AnswerResponse(BaseModel):
     sources: List[SourceRead]
     grounded: bool
     context_used: int
+    evidence_status: str = Field(
+        default="insufficient",
+        description=(
+            "Categorical evidence label: supported, partially_supported, "
+            "insufficient, or out_of_scope. This is not a calibrated numeric "
+            "confidence score."
+        ),
+        examples=["supported"],
+    )

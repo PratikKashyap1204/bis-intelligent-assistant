@@ -86,10 +86,11 @@ def answer_question(request: AnswerRequest, db: Session = Depends(get_db)) -> An
         ) from exc
     latency_ms = (time.perf_counter() - started) * 1000.0
     logger.info(
-        "answer method=%s context_used=%s grounded=%s latency_ms=%.1f query=%.80s",
+        "answer method=%s context_used=%s grounded=%s evidence_status=%s latency_ms=%.1f query=%.80s",
         result.retrieval_method,
         result.context_used,
         result.grounded,
+        result.evidence_status,
         latency_ms,
         request.query,
     )
@@ -118,4 +119,5 @@ def answer_question(request: AnswerRequest, db: Session = Depends(get_db)) -> An
         ],
         grounded=result.grounded,
         context_used=result.context_used,
+        evidence_status=result.evidence_status,
     )

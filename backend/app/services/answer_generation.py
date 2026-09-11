@@ -42,12 +42,14 @@ Grounding guarantees (see generate() below):
     CORPUS_SCOPE_NOTE).
 
 Known limitation (documented, not hidden):
-  This provider cannot judge *partial* sufficiency (e.g. "the retrieved
-  clauses are topically related but don't fully answer this"). It only
-  distinguishes "context found" vs "no context found". A future
-  LLM-backed provider implementing the same protocol could reason about
-  partial sufficiency — that is an explicit Milestone 4+ candidate, not
-  attempted here.
+  The extractive provider cannot judge *partial* sufficiency on its own
+  (e.g. "the retrieved clauses are topically related but don't fully
+  answer this"). It distinguishes empty context (insufficient / out of
+  scope, the latter decided by RAGService's corpus-token gate) from
+  non-empty context (supported, quoting every supplied item). The LLM
+  provider (same protocol) may label ``partially_supported`` when the
+  supplied sources only cover some asked clauses — still without a
+  numeric confidence score.
 """
 
 from __future__ import annotations
@@ -70,6 +72,54 @@ INSUFFICIENT_CONTEXT_ANSWER = (
     "The available BIS material does not establish an answer to this question. "
     "No sufficiently relevant clause was found in the currently ingested BIS "
     "Standard/QCO content for this query."
+)
+
+OUT_OF_SCOPE_ANSWER = (
+    "This question is outside the currently ingested BIS corpus. "
+    "The available BIS material does not establish an answer to this question "
+    "because the ingested Standard/QCO content does not cover this topic."
+)
+
+# Categorical evidence labels (Milestone 10). These are not a calibrated
+# numeric confidence score — they only describe how the supplied context
+# relates to the question. Do not invent a 0–1 confidence from them.
+EVIDENCE_SUPPORTED = "supported"
+EVIDENCE_PARTIALLY_SUPPORTED = "partially_supported"
+EVIDENCE_INSUFFICIENT = "insufficient"
+EVIDENCE_OUT_OF_SCOPE = "out_of_scope"
+VALID_EVIDENCE_STATUSES = frozenset(
+    {
+        EVIDENCE_SUPPORTED,
+        EVIDENCE_PARTIALLY_SUPPORTED,
+        EVIDENCE_INSUFFICIENT,
+        EVIDENCE_OUT_OF_SCOPE,
+    }
+)
+_SUPPORTED_EVIDENCE_STATUSES = frozenset(
+    {EVIDENCE_SUPPORTED, EVIDENCE_PARTIALLY_SUPPORTED}
+)
+
+_EVIDENCE_STATUS_ALIASES = {
+    "supported": EVIDENCE_SUPPORTED,
+    "fully_supported": EVIDENCE_SUPPORTED,
+    "partial": EVIDENCE_PARTIALLY_SUPPORTED,
+    "partially_supported": EVIDENCE_PARTIALLY_SUPPORTED,
+    "insufficient": EVIDENCE_INSUFFICIENT,
+    "insufficient_evidence": EVIDENCE_INSUFFICIENT,
+    "not_enough_information": EVIDENCE_INSUFFICIENT,
+    "out_of_scope": EVIDENCE_OUT_OF_SCOPE,
+    "outofscope": EVIDENCE_OUT_OF_SCOPE,
+    "outside_corpus": EVIDENCE_OUT_OF_SCOPE,
+}
+
+_ABSTENTION_HINTS = (
+    "does not establish",
+    "not enough information",
+    "insufficient evidence",
+    "cannot be determined",
+    "outside the currently ingested",
+    "does not cover this topic",
+    "no sufficiently relevant clause",
 )
 
 # Clause text is truncated to this many characters per quoted excerpt so one
@@ -117,6 +167,10 @@ class GeneratedAnswer:
     # any index that isn't in the context it sent — see
     # RAGService._build_citations.
     cited_indices: List[int] = field(default_factory=list)
+    # Categorical evidence label. None means "provider did not decide"
+    # (legacy stubs); RAGService then infers from grounded/empty context.
+    # Never a numeric confidence score.
+    evidence_status: Optional[str] = None
 
 
 class AnswerGenerationProvider(Protocol):
@@ -163,6 +217,41 @@ def _quote(text: str) -> str:
     return text
 
 
+def _first_sentence(text: str) -> str:
+    """Deterministic first-sentence excerpt for extractive multi-clause leads."""
+    text = (text or "").strip()
+    if not text:
+        return ""
+    parts = re.split(r"(?<=[.!?])\s+", text, maxsplit=1)
+    sentence = parts[0].strip()
+    if len(sentence) > 280:
+        sentence = sentence[:277].rstrip() + "…"
+    return sentence
+
+
+def looks_like_abstention(text: str) -> bool:
+    """True when answer text already says the sources do not answer the question."""
+    lowered = (text or "").lower()
+    return any(hint in lowered for hint in _ABSTENTION_HINTS)
+
+
+def normalize_evidence_status(raw: Any) -> Optional[str]:
+    """Map a provider/LLM evidence label onto the closed Milestone 10 set."""
+    if not isinstance(raw, str):
+        return None
+    key = raw.strip().lower().replace(" ", "_").replace("-", "_")
+    return _EVIDENCE_STATUS_ALIASES.get(key)
+
+
+def build_abstention_answer(evidence_status: str) -> str:
+    body = (
+        OUT_OF_SCOPE_ANSWER
+        if evidence_status == EVIDENCE_OUT_OF_SCOPE
+        else INSUFFICIENT_CONTEXT_ANSWER
+    )
+    return f"{body}\n\n{CORPUS_SCOPE_NOTE}"
+
+
 class ExtractiveAnswerGenerationProvider:
     """
     Deterministic, offline, extractive answer generator.
@@ -177,9 +266,10 @@ class ExtractiveAnswerGenerationProvider:
     def generate(self, question: str, context: List[ContextItem]) -> GeneratedAnswer:
         if not context:
             return GeneratedAnswer(
-                answer_text=f"{INSUFFICIENT_CONTEXT_ANSWER}\n\n{CORPUS_SCOPE_NOTE}",
+                answer_text=build_abstention_answer(EVIDENCE_INSUFFICIENT),
                 grounded=False,
                 cited_indices=[],
+                evidence_status=EVIDENCE_INSUFFICIENT,
             )
 
         lines = [
@@ -187,6 +277,14 @@ class ExtractiveAnswerGenerationProvider:
             "explicitly supported by the retrieved clauses:",
             "",
         ]
+        if len(context) > 1:
+            lines.append("The retrieved clauses together support the following points:")
+            for item in context:
+                sentence = _first_sentence(item.clause_text)
+                if sentence:
+                    lines.append(f"{sentence} [{item.index}]")
+            lines.append("")
+            lines.append("Quoted source text:")
         for item in context:
             source = _describe_source(item)
             clause_label = f"Clause {item.clause_number}" if item.clause_number else "Clause"
@@ -209,6 +307,7 @@ class ExtractiveAnswerGenerationProvider:
             answer_text="\n".join(lines),
             grounded=True,
             cited_indices=[item.index for item in context],
+            evidence_status=EVIDENCE_SUPPORTED,
         )
 
 
@@ -222,8 +321,9 @@ class ExtractiveAnswerGenerationProvider:
 #     credential slot for this project (added, unused, back in an earlier
 #     stage) — this is the vendor the project already anticipated.
 #   - Its "json_object" response format gives reasonably reliable
-#     structured output ({"answer": ..., "citation_ids": [...]}) without
-#     requiring a heavier structured-outputs/function-calling setup.
+#     structured output ({"answer": ..., "citation_ids": [...],
+#     "evidence_status": ...}) without requiring a heavier
+#     structured-outputs/function-calling setup.
 #   - Low-cost small models (e.g. gpt-4o-mini) are inexpensive enough for
 #     a development project used only via an explicit manual demo script.
 #
@@ -269,24 +369,38 @@ def build_grounding_system_prompt() -> str:
         "2. Do not invent or assume any clause, requirement, date, authority, penalty, "
         "standard number, or certification rule that is not explicitly present in the "
         "supplied context.\n"
-        "3. If the supplied context does not establish an answer to the question, say "
-        "so explicitly (e.g. 'The supplied BIS material does not establish an answer "
-        "to this question.'). Do not guess.\n"
-        "4. Clearly distinguish between a BIS Standard, a QCO (Quality Control Order), "
+        "3. If the question has several parts, you MAY synthesize a single coherent "
+        "answer from multiple SOURCE items, but every substantive claim must be "
+        "supported by at least one supplied SOURCE. Do not merge sources into a "
+        "claim that none of them actually states.\n"
+        "4. Choose exactly one evidence_status:\n"
+        "   - \"supported\": the supplied sources fully establish the answer.\n"
+        "   - \"partially_supported\": the sources establish some asked parts but not all.\n"
+        "   - \"insufficient\": the sources are related or empty of a usable answer, "
+        "but the question is still inside the BIS domain of this corpus.\n"
+        "   - \"out_of_scope\": the question is outside what the supplied sources "
+        "(and this ingested corpus) can address.\n"
+        "   Do not invent a numeric confidence score.\n"
+        "5. If evidence_status is insufficient or out_of_scope, do not present "
+        "unsupported claims as facts. Say that the supplied material does not "
+        "establish an answer. citation_ids must be empty in that case.\n"
+        "6. Clearly distinguish between a BIS Standard, a QCO (Quality Control Order), "
         "and a circular/other document type — use the type given for each SOURCE, "
         "never assume one.\n"
-        "5. When you rely on a SOURCE, cite it using its exact identifier in square "
+        "7. When you rely on a SOURCE, cite it using its exact identifier in square "
         "brackets, e.g. [SOURCE_2]. Only cite SOURCE identifiers that were given to "
-        "you. Never invent new identifiers, and never cite a SOURCE for information "
-        "it does not contain.\n"
-        "6. Do not state or generate any citation metadata yourself (no clause "
-        "numbers, page numbers, standard numbers, or URLs beyond what appears inside "
-        "the SOURCE text) — the calling system attaches that metadata separately, "
-        "keyed only by the SOURCE identifiers you cite.\n"
-        "7. Respond with ONLY a single JSON object, no other text, of exactly this "
+        "you in this request. Never invent new identifiers, never reuse identifiers "
+        "from earlier questions, and never cite a SOURCE for information it does "
+        "not contain.\n"
+        "8. Do not state or generate any citation metadata yourself (no clause "
+        "numbers, page numbers, standard numbers, clause_id, document_id, or URLs "
+        "beyond what appears inside the SOURCE text) — the calling system attaches "
+        "that metadata separately, keyed only by the SOURCE identifiers you cite.\n"
+        "9. Respond with ONLY a single JSON object, no other text, of exactly this "
         "form:\n"
         '   {"answer": "<answer text, with inline [SOURCE_n] citations>", '
-        '"citation_ids": ["SOURCE_n", ...]}\n'
+        '"citation_ids": ["SOURCE_n", ...], '
+        '"evidence_status": "supported|partially_supported|insufficient|out_of_scope"}\n'
         "   citation_ids must list every SOURCE identifier your answer actually "
         "relies on, and nothing else."
     )
@@ -308,35 +422,101 @@ def build_context_prompt(question: str, context: List[ContextItem]) -> str:
     return "\n".join(lines)
 
 
+_SOURCE_TOKEN_RE = re.compile(r"^\[?\s*SOURCE_(\d+)\s*\]?$", re.IGNORECASE)
+_INLINE_SOURCE_RE = re.compile(r"\[SOURCE_(\d+)\]", re.IGNORECASE)
+_NUMERIC_CITE_RE = re.compile(r"\[(\d+)\]")
+
+
+def _canonical_source_index(raw: Any) -> Optional[int]:
+    """Return n for a well-formed SOURCE_n token, else None."""
+    if not isinstance(raw, str):
+        return None
+    match = _SOURCE_TOKEN_RE.match(raw.strip())
+    if not match:
+        return None
+    return int(match.group(1))
+
+
 def _resolve_citation_ids(citation_ids: Any, context: List[ContextItem]) -> List[int]:
     """
     Map LLM-provided "SOURCE_n" strings back to real ContextItem indices.
-    Anything that isn't a string, or doesn't match a real SOURCE id that
-    was actually sent in this request, is silently dropped — this is the
-    only path by which the LLM's output can influence citations at all.
+    Anything that isn't a well-formed SOURCE id that was actually sent in
+    this request is silently dropped — this is the only path by which the
+    LLM's output can influence citations at all.
+
+    Accepts SOURCE_n / source_n / [SOURCE_n]. Rejects malformed tokens
+    (SOURCE_1.5, SOURCE_, SOURCE_abc), non-strings, duplicates, and ids
+    that were not supplied in ``context``.
     """
     if not isinstance(citation_ids, list):
         return []
-    valid_ids = {f"SOURCE_{item.index}": item.index for item in context}
+    valid_indices = {item.index for item in context}
     resolved: List[int] = []
     for raw_id in citation_ids:
-        if not isinstance(raw_id, str):
+        idx = _canonical_source_index(raw_id)
+        if idx is None or idx not in valid_indices or idx in resolved:
             continue
-        idx = valid_ids.get(raw_id.strip())
-        if idx is not None and idx not in resolved:
-            resolved.append(idx)
+        resolved.append(idx)
     return resolved
+
+
+def _harvest_inline_source_indices(answer_text: str, context: List[ContextItem]) -> List[int]:
+    valid_indices = {item.index for item in context}
+    harvested: List[int] = []
+    for match in _INLINE_SOURCE_RE.finditer(answer_text or ""):
+        idx = int(match.group(1))
+        if idx in valid_indices and idx not in harvested:
+            harvested.append(idx)
+    return harvested
+
+
+def merge_cited_indices(*groups: List[int]) -> List[int]:
+    merged: List[int] = []
+    for group in groups:
+        for idx in group:
+            if idx not in merged:
+                merged.append(idx)
+    return merged
+
+
+def rewrite_answer_citations(answer_text: str, valid_indices: List[int]) -> str:
+    """
+    Normalize inline citations to ``[n]`` using only indices present in
+    the supplied context. Unknown/malformed SOURCE markers and numeric
+    citation chips that do not match a real context item are stripped.
+    """
+    allowed = set(valid_indices)
+
+    def _source_repl(match: re.Match) -> str:
+        idx = int(match.group(1))
+        return f"[{idx}]" if idx in allowed else ""
+
+    rewritten = _INLINE_SOURCE_RE.sub(_source_repl, answer_text or "")
+
+    def _numeric_repl(match: re.Match) -> str:
+        idx = int(match.group(1))
+        return match.group(0) if idx in allowed else ""
+
+    rewritten = _NUMERIC_CITE_RE.sub(_numeric_repl, rewritten)
+    rewritten = re.sub(r"[ \t]+\n", "\n", rewritten)
+    rewritten = re.sub(r" {2,}", " ", rewritten)
+    return rewritten.strip()
 
 
 def _parse_llm_json_response(
     raw_text: Optional[str], context: List[ContextItem]
-) -> Optional[Tuple[str, List[int]]]:
+) -> Optional[Tuple[str, List[int], str]]:
     """
     Parse + validate the LLM's JSON output. Returns None (triggering a
     fallback to the deterministic provider) if the output is missing,
     not valid JSON, not an object, or missing a usable ``answer`` string.
-    A missing/invalid ``citation_ids`` is tolerated (treated as empty) —
-    that's a valid "no grounded citation" case, not malformed output.
+    A missing/invalid ``citation_ids`` is tolerated (treated as empty).
+    Unknown evidence_status values are ignored (inferred from citations).
+
+    Also returns None when the model claims support (or makes a
+    non-abstaining answer) without any valid citation into the supplied
+    context — that is treated as an unsupported-claim failure, not as a
+    grounded answer.
     """
     if not raw_text or not raw_text.strip():
         return None
@@ -363,8 +543,29 @@ def _parse_llm_json_response(
     if not isinstance(answer_text, str) or not answer_text.strip():
         return None
 
-    resolved_indices = _resolve_citation_ids(data.get("citation_ids"), context)
-    return answer_text.strip(), resolved_indices
+    from_ids = _resolve_citation_ids(data.get("citation_ids"), context)
+    from_inline = _harvest_inline_source_indices(answer_text, context)
+    cited_indices = merge_cited_indices(from_ids, from_inline)
+    evidence_status = normalize_evidence_status(data.get("evidence_status"))
+
+    abstaining = looks_like_abstention(answer_text)
+    if evidence_status in _SUPPORTED_EVIDENCE_STATUSES and not cited_indices:
+        return None
+    if evidence_status is None:
+        if cited_indices:
+            evidence_status = EVIDENCE_SUPPORTED
+        elif abstaining:
+            evidence_status = EVIDENCE_INSUFFICIENT
+        else:
+            # Positive-sounding answer with no valid SOURCE ids.
+            return None
+    if evidence_status in (EVIDENCE_INSUFFICIENT, EVIDENCE_OUT_OF_SCOPE):
+        cited_indices = []
+
+    rewritten = rewrite_answer_citations(answer_text.strip(), cited_indices)
+    if not rewritten:
+        return None
+    return rewritten, cited_indices, evidence_status
 
 
 class LLMAnswerGenerationProvider:
@@ -459,14 +660,17 @@ class LLMAnswerGenerationProvider:
 
         parsed = _parse_llm_json_response(raw_text, context)
         if parsed is None:
-            # Malformed output (not JSON, wrong shape, no usable answer).
+            # Malformed output (not JSON, wrong shape, no usable answer)
+            # or an unsupported claim with no valid SOURCE ids.
             return self.fallback.generate(question, context)
 
-        answer_text, cited_indices = parsed
+        answer_text, cited_indices, evidence_status = parsed
+        grounded = evidence_status in _SUPPORTED_EVIDENCE_STATUSES and len(cited_indices) > 0
         return GeneratedAnswer(
             answer_text=f"{answer_text}\n\n{CORPUS_SCOPE_NOTE}",
-            grounded=len(cited_indices) > 0,
+            grounded=grounded,
             cited_indices=cited_indices,
+            evidence_status=evidence_status,
         )
 
 

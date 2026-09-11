@@ -43,6 +43,10 @@ def _report_to_dict(report: RagEvaluationReport) -> dict:
         "grounded_rate": report.grounded_rate,
         "ungrounded_rate": report.ungrounded_rate,
         "citation_integrity_rate": report.citation_integrity_rate,
+        "supported_rate": report.supported_rate,
+        "partially_supported_rate": report.partially_supported_rate,
+        "insufficient_rate": report.insufficient_rate,
+        "out_of_scope_rate": report.out_of_scope_rate,
         "by_category": {
             cat: {
                 "scored_case_count": sub.scored_case_count,
@@ -52,6 +56,10 @@ def _report_to_dict(report: RagEvaluationReport) -> dict:
                 "grounded_rate": sub.grounded_rate,
                 "ungrounded_rate": sub.ungrounded_rate,
                 "citation_integrity_rate": sub.citation_integrity_rate,
+                "supported_rate": sub.supported_rate,
+                "partially_supported_rate": sub.partially_supported_rate,
+                "insufficient_rate": sub.insufficient_rate,
+                "out_of_scope_rate": sub.out_of_scope_rate,
             }
             for cat, sub in report.by_category().items()
         },
@@ -69,6 +77,7 @@ def _report_to_dict(report: RagEvaluationReport) -> dict:
                 "context_precision": cr.context_precision,
                 "correctly_ungrounded": cr.correctly_ungrounded,
                 "citations_subset_of_context": cr.citations_subset_of_context,
+                "evidence_status": cr.evidence_status,
             }
             for cr in report.case_results
         ],
@@ -85,6 +94,10 @@ def _print_report(report: RagEvaluationReport) -> None:
     print(f"Grounded rate (in-scope): {report.grounded_rate}")
     print(f"Ungrounded rate (no-result): {report.ungrounded_rate}")
     print(f"Citation integrity: {report.citation_integrity_rate}")
+    print(f"In-scope supported rate: {report.supported_rate}")
+    print(f"In-scope partially supported rate: {report.partially_supported_rate}")
+    print(f"No-result insufficient rate: {report.insufficient_rate}")
+    print(f"No-result out-of-scope rate: {report.out_of_scope_rate}")
     print(f"--- {report.method.upper()} by category ---")
     for cat, sub in sorted(report.by_category().items()):
         if sub.scored_case_count:

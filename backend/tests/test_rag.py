@@ -147,6 +147,7 @@ def test_extractive_provider_returns_insufficient_answer_for_empty_context():
 
     assert result.grounded is False
     assert result.cited_indices == []
+    assert result.evidence_status == "insufficient"
     assert "does not establish an answer" in result.answer_text
     assert CORPUS_SCOPE_NOTE in result.answer_text
 
@@ -171,6 +172,7 @@ def test_extractive_provider_cites_every_context_item_and_quotes_only_given_text
 
     assert result.grounded is True
     assert result.cited_indices == [1]
+    assert result.evidence_status == "supported"
     assert "[1]" in result.answer_text
     assert "A very specific extractable fact about certification." in result.answer_text
     # Never invents facts outside the given text: no fabricated dates/authorities.
@@ -210,6 +212,9 @@ def test_extractive_provider_distinguishes_standard_from_qco():
     provider = ExtractiveAnswerGenerationProvider()
     result = provider.generate("q", [standard_item, qco_item])
 
+    assert result.evidence_status == "supported"
+    assert result.cited_indices == [1, 2]
+    assert "The retrieved clauses together support the following points:" in result.answer_text
     assert "Indian Standard IS 9999" in result.answer_text
     assert "QCO circular 'Sample QCO Circular'" in result.answer_text
 
@@ -227,6 +232,7 @@ def test_relevant_query_retrieves_context_and_returns_grounded_answer(db_session
     assert result.grounded is True
     assert result.context_used > 0
     assert result.citations
+    assert result.evidence_status == "supported"
     assert result.retrieval_method == "vector"
 
 
@@ -290,6 +296,7 @@ def test_insufficient_context_produces_grounded_not_enough_information(db_sessio
     assert result.grounded is False
     assert result.context_used == 0
     assert result.citations == []
+    assert result.evidence_status == "insufficient"
     assert "does not establish an answer" in result.answer
 
 
@@ -457,6 +464,7 @@ def test_answer_endpoint_returns_grounded_response(db_session, monkeypatch):
     assert body["citations"]
     assert body["retrieval_method"] == "vector"
     assert body["context_used"] > 0
+    assert body["evidence_status"] == "supported"
     assert body["sources"]
     assert "[1]" in body["answer"]
     for citation in body["citations"]:
@@ -553,6 +561,7 @@ def test_answer_endpoint_insufficient_context_for_unrelated_question(db_session,
     body = response.json()
     assert body["grounded"] is False
     assert body["citations"] == []
+    assert body["evidence_status"] == "out_of_scope"
     assert "does not establish an answer" in body["answer"]
 
 
@@ -596,7 +605,9 @@ def test_corpus_token_gate_abstains_unsupported_product_despite_keyword_hit(db_s
     assert result.grounded is False
     assert result.context_used == 0
     assert result.citations == []
+    assert result.evidence_status == "out_of_scope"
     assert "does not establish an answer" in result.answer
+    assert "outside the currently ingested" in result.answer
 
 
 def test_corpus_token_gate_does_not_block_in_scope_certification_question(db_session):
@@ -605,4 +616,5 @@ def test_corpus_token_gate_does_not_block_in_scope_certification_question(db_ses
     result = rag.answer("What certification requirements exist for appliances?")
     assert result.grounded is True
     assert result.context_used > 0
+    assert result.evidence_status == "supported"
 

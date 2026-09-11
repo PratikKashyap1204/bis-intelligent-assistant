@@ -47,6 +47,7 @@ describe("askQuestion", () => {
         sources: [],
         grounded: false,
         context_used: 0,
+        evidence_status: "insufficient",
       }),
     });
     vi.stubGlobal("fetch", fetchMock);

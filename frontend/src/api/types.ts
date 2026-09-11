@@ -36,6 +36,12 @@ export interface Source {
   document_id: number | null;
 }
 
+export type EvidenceStatus =
+  | "supported"
+  | "partially_supported"
+  | "insufficient"
+  | "out_of_scope";
+
 export interface AnswerResponse {
   answer: string;
   citations: Citation[];
@@ -43,6 +49,7 @@ export interface AnswerResponse {
   sources: Source[];
   grounded: boolean;
   context_used: number;
+  evidence_status: EvidenceStatus;
 }
 
 export interface AnswerRequest {

@@ -149,6 +149,8 @@ def test_correct_question_and_context_sent_to_llm_with_grounding_system_prompt()
         "Do not invent",
         "does not establish an answer",
         "SOURCE_",
+        "evidence_status",
+        "partially_supported",
     ]:
         assert phrase in system_prompt
 
@@ -204,8 +206,12 @@ def test_citation_ids_outside_current_request_context_never_leak_into_response()
 
     result = provider.generate("question", SAMPLE_CONTEXT)
 
-    assert result.cited_indices == []
-    assert result.grounded is False  # no real citation -> not grounded
+    # Stale SOURCE ids are rejected. A non-abstaining answer with no valid
+    # citation is treated as an unsupported claim and falls back to extractive.
+    expected = ExtractiveAnswerGenerationProvider().generate("question", SAMPLE_CONTEXT)
+    assert result.answer_text == expected.answer_text
+    assert result.cited_indices == expected.cited_indices
+    assert "SOURCE_5" not in result.answer_text
 
 
 # ---------------------------------------------------------------------------
@@ -400,3 +406,257 @@ def test_corpus_scope_note_appended_to_grounded_llm_answers():
 
     assert CORPUS_SCOPE_NOTE in result.answer_text
     assert "Yes, certification is required." in result.answer_text
+
+
+# ---------------------------------------------------------------------------
+# Milestone 10: evidence quality + adversarial citation safety
+# ---------------------------------------------------------------------------
+
+def test_fabricated_source_ids_are_rejected():
+    fake_client = FakeOpenAIClient(
+        response_content=json.dumps(
+            {
+                "answer": "Penalty is five years. [SOURCE_99]",
+                "citation_ids": ["SOURCE_99", "SOURCE_0", "SOURCE_999"],
+                "evidence_status": "supported",
+            }
+        )
+    )
+    fallback = ExtractiveAnswerGenerationProvider()
+    provider = _make_provider(fake_client, fallback=fallback)
+
+    result = provider.generate("question", SAMPLE_CONTEXT)
+    expected = fallback.generate("question", SAMPLE_CONTEXT)
+
+    assert result.answer_text == expected.answer_text
+    assert 99 not in result.cited_indices
+    assert "SOURCE_99" not in result.answer_text
+
+
+def test_malformed_citation_ids_are_rejected():
+    fake_client = FakeOpenAIClient(
+        response_content=json.dumps(
+            {
+                "answer": "Certification is required. [SOURCE_1]",
+                "citation_ids": ["SOURCE_1.5", "SOURCE_", "SOURCE_abc", "1", "[1]", "SOURCE 1"],
+                "evidence_status": "supported",
+            }
+        )
+    )
+    provider = _make_provider(fake_client)
+    result = provider.generate("question", SAMPLE_CONTEXT)
+
+    # Inline [SOURCE_1] is harvested; malformed citation_ids are dropped.
+    assert result.cited_indices == [1]
+    assert result.evidence_status == "supported"
+    assert "[1]" in result.answer_text
+    assert "SOURCE_1.5" not in result.answer_text
+
+
+def test_duplicate_citation_ids_are_normalized():
+    fake_client = FakeOpenAIClient(
+        response_content=json.dumps(
+            {
+                "answer": "Certification is required. [SOURCE_1] [SOURCE_1]",
+                "citation_ids": ["SOURCE_1", "SOURCE_1", "[SOURCE_1]", "source_1"],
+                "evidence_status": "supported",
+            }
+        )
+    )
+    provider = _make_provider(fake_client)
+    result = provider.generate("question", SAMPLE_CONTEXT)
+
+    assert result.cited_indices == [1]
+    assert result.answer_text.count("[1]") == 2
+    assert "SOURCE_1" not in result.answer_text
+
+
+def test_citations_outside_supplied_context_are_dropped():
+    fake_client = FakeOpenAIClient(
+        response_content=json.dumps(
+            {
+                "answer": "Earthing applies. [SOURCE_2] and also [SOURCE_7]",
+                "citation_ids": ["SOURCE_2", "SOURCE_7"],
+                "evidence_status": "supported",
+            }
+        )
+    )
+    provider = _make_provider(fake_client)
+    result = provider.generate("question", SAMPLE_CONTEXT)
+
+    assert result.cited_indices == [2]
+    assert "[2]" in result.answer_text
+    assert "SOURCE_7" not in result.answer_text
+    assert "[7]" not in result.answer_text
+
+
+def test_missing_answer_field_falls_back_to_extractive():
+    fake_client = FakeOpenAIClient(
+        response_content=json.dumps({"citation_ids": ["SOURCE_1"], "evidence_status": "supported"})
+    )
+    fallback = ExtractiveAnswerGenerationProvider()
+    provider = _make_provider(fake_client, fallback=fallback)
+    result = provider.generate("question", SAMPLE_CONTEXT)
+    assert result.answer_text == fallback.generate("question", SAMPLE_CONTEXT).answer_text
+
+
+def test_malformed_json_falls_back_to_extractive():
+    fake_client = FakeOpenAIClient(response_content="{answer: not json")
+    fallback = ExtractiveAnswerGenerationProvider()
+    provider = _make_provider(fake_client, fallback=fallback)
+    result = provider.generate("question", SAMPLE_CONTEXT)
+    assert result.answer_text == fallback.generate("question", SAMPLE_CONTEXT).answer_text
+
+
+def test_unsupported_claims_without_valid_citations_fall_back():
+    fake_client = FakeOpenAIClient(
+        response_content=json.dumps(
+            {
+                "answer": "The penalty is imprisonment for five years and a fine of ten lakh rupees.",
+                "citation_ids": [],
+                "evidence_status": "supported",
+            }
+        )
+    )
+    fallback = ExtractiveAnswerGenerationProvider()
+    provider = _make_provider(fake_client, fallback=fallback)
+    result = provider.generate("question", SAMPLE_CONTEXT)
+    expected = fallback.generate("question", SAMPLE_CONTEXT)
+    assert result.answer_text == expected.answer_text
+    assert result.evidence_status == expected.evidence_status
+    assert "ten lakh" not in result.answer_text
+
+
+def test_empty_context_skips_llm_and_is_insufficient():
+    fake_client = FakeOpenAIClient(
+        response_content=json.dumps({"answer": "hallucinated", "citation_ids": ["SOURCE_1"]})
+    )
+    provider = _make_provider(fake_client)
+    result = provider.generate("some question", [])
+
+    assert fake_client.calls == []
+    assert result.grounded is False
+    assert result.cited_indices == []
+    assert result.evidence_status == "insufficient"
+    assert "does not establish an answer" in result.answer_text
+
+
+def test_multi_context_answer_synthesizes_and_cites_both_sources():
+    fake_client = FakeOpenAIClient(
+        response_content=json.dumps(
+            {
+                "answer": (
+                    "Manufacturers must obtain BIS certification before sale [SOURCE_1], "
+                    "and household appliances must meet earthing requirements [SOURCE_2]."
+                ),
+                "citation_ids": ["SOURCE_1", "SOURCE_2"],
+                "evidence_status": "supported",
+            }
+        )
+    )
+    provider = _make_provider(fake_client)
+    result = provider.generate(
+        "What certification and earthing rules apply to household appliances?",
+        SAMPLE_CONTEXT,
+    )
+
+    assert result.grounded is True
+    assert result.evidence_status == "supported"
+    assert result.cited_indices == [1, 2]
+    assert "[1]" in result.answer_text
+    assert "[2]" in result.answer_text
+    assert "SOURCE_1" not in result.answer_text
+    assert "certification" in result.answer_text.lower()
+    assert "earthing" in result.answer_text.lower()
+
+
+def test_partially_supported_status_is_preserved_with_real_citations():
+    fake_client = FakeOpenAIClient(
+        response_content=json.dumps(
+            {
+                "answer": "Certification before sale is required [SOURCE_1]. Earthing details for this product are not in the supplied material.",
+                "citation_ids": ["SOURCE_1"],
+                "evidence_status": "partially_supported",
+            }
+        )
+    )
+    provider = _make_provider(fake_client)
+    result = provider.generate("question", SAMPLE_CONTEXT)
+
+    assert result.grounded is True
+    assert result.evidence_status == "partially_supported"
+    assert result.cited_indices == [1]
+
+
+def test_llm_insufficient_status_clears_citations():
+    fake_client = FakeOpenAIClient(
+        response_content=json.dumps(
+            {
+                "answer": "The supplied BIS material does not establish an answer to this question.",
+                "citation_ids": ["SOURCE_1"],
+                "evidence_status": "insufficient",
+            }
+        )
+    )
+    provider = _make_provider(fake_client)
+    result = provider.generate("question", SAMPLE_CONTEXT)
+
+    assert result.grounded is False
+    assert result.evidence_status == "insufficient"
+    assert result.cited_indices == []
+
+
+def test_llm_out_of_scope_status_clears_citations():
+    fake_client = FakeOpenAIClient(
+        response_content=json.dumps(
+            {
+                "answer": "This question is outside the currently ingested BIS corpus.",
+                "citation_ids": ["SOURCE_2"],
+                "evidence_status": "out_of_scope",
+            }
+        )
+    )
+    provider = _make_provider(fake_client)
+    result = provider.generate("question", SAMPLE_CONTEXT)
+
+    assert result.grounded is False
+    assert result.evidence_status == "out_of_scope"
+    assert result.cited_indices == []
+
+
+def test_extractive_fallback_is_used_on_provider_error():
+    fake_client = FakeOpenAIClient(raise_exc=RuntimeError("boom"))
+    fallback = ExtractiveAnswerGenerationProvider()
+    provider = _make_provider(fake_client, fallback=fallback)
+    result = provider.generate("question", SAMPLE_CONTEXT)
+    expected = fallback.generate("question", SAMPLE_CONTEXT)
+    assert result.answer_text == expected.answer_text
+    assert result.evidence_status == "supported"
+    assert result.cited_indices == [1, 2]
+
+
+def test_llm_cannot_control_clause_or_document_identity_fields():
+    fake_client = FakeOpenAIClient(
+        response_content=json.dumps(
+            {
+                "answer": "Certification is required. [SOURCE_1]",
+                "citation_ids": ["SOURCE_1"],
+                "evidence_status": "supported",
+                "clause_id": 9999,
+                "clause_number": "99.99",
+                "page_number": 9999,
+                "standard_id": 42,
+                "document_id": 42,
+                "source_url": "https://evil.example/fabricated.pdf",
+            }
+        )
+    )
+    provider = _make_provider(fake_client)
+    result = provider.generate("question", SAMPLE_CONTEXT)
+
+    assert result.cited_indices == [1]
+    assert not hasattr(result, "clause_id")
+    assert not hasattr(result, "document_id")
+    assert not hasattr(result, "source_url")
+    assert "evil.example" not in result.answer_text
+    assert "99.99" not in result.answer_text

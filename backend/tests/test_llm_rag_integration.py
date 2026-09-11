@@ -106,11 +106,11 @@ def test_rag_service_still_works_with_llm_provider(db_session):
     assert citation.document_title == document.title
     assert citation.clause_number in {c.clause_number for c in clauses}
     assert citation.source_url == document.source_url
-    # RAGService does not rewrite the LLM's answer text (it only validates
-    # citation IDs into structured Citation objects) — the literal
-    # "[SOURCE_1]" marker from the fake LLM response is expected to still
-    # appear in the raw answer text as-is.
-    assert "[SOURCE_1]" in result.answer
+    # Citation IDs are validated against the supplied context; inline
+    # SOURCE_n markers are rewritten to [n] so the frontend can chip them.
+    assert "[1]" in result.answer
+    assert "SOURCE_1" not in result.answer
+    assert result.evidence_status == "supported"
 
 
 def test_rag_service_with_llm_provider_handles_insufficient_context(db_session):

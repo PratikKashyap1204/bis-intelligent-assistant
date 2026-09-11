@@ -46,7 +46,17 @@ from sqlalchemy.orm import Session
 from app.models.clause import Clause
 from app.models.document import Document
 from app.models.standard import Standard
-from app.services.answer_generation import AnswerGenerationProvider, ContextItem
+from app.services.answer_generation import (
+    EVIDENCE_INSUFFICIENT,
+    EVIDENCE_OUT_OF_SCOPE,
+    EVIDENCE_PARTIALLY_SUPPORTED,
+    EVIDENCE_SUPPORTED,
+    AnswerGenerationProvider,
+    ContextItem,
+    GeneratedAnswer,
+    VALID_EVIDENCE_STATUSES,
+    build_abstention_answer,
+)
 from app.services.retrieval import BISRetrievalService, RetrievalResult, tokenize_query
 
 DEFAULT_METHOD = "vector"
@@ -122,6 +132,9 @@ class RAGAnswer:
     retrieval_method: str
     grounded: bool
     context_used: int
+    # Categorical evidence label (supported / partially_supported /
+    # insufficient / out_of_scope). Not a numeric confidence score.
+    evidence_status: str = EVIDENCE_INSUFFICIENT
 
 
 def _dedup_key(result: RetrievalResult) -> Tuple:
@@ -372,6 +385,40 @@ def _to_citation(item: ContextItem) -> Citation:
     )
 
 
+def _finalize_evidence(
+    generated: GeneratedAnswer,
+    context_items: List[ContextItem],
+    gate_blocked: bool,
+) -> Tuple[str, bool, str, List[int]]:
+    """
+    Resolve evidence_status / grounded / answer text after generation.
+
+    Empty context: RAG (not the LLM) decides insufficient vs out-of-scope.
+    Providers that omit evidence_status keep M1–M9 grounded semantics.
+    """
+    if not context_items:
+        status = EVIDENCE_OUT_OF_SCOPE if gate_blocked else EVIDENCE_INSUFFICIENT
+        answer_text = (
+            build_abstention_answer(status)
+            if gate_blocked
+            else generated.answer_text
+        )
+        return status, False, answer_text, []
+
+    status = generated.evidence_status
+    if status not in VALID_EVIDENCE_STATUSES:
+        status = EVIDENCE_SUPPORTED if generated.grounded else EVIDENCE_INSUFFICIENT
+
+    cited_indices = list(generated.cited_indices)
+    grounded = generated.grounded
+    if status in (EVIDENCE_INSUFFICIENT, EVIDENCE_OUT_OF_SCOPE):
+        grounded = False
+        cited_indices = []
+    elif status in (EVIDENCE_SUPPORTED, EVIDENCE_PARTIALLY_SUPPORTED):
+        grounded = True
+    return status, grounded, generated.answer_text, cited_indices
+
+
 class RAGService:
     """
     Orchestrates BISRetrievalService + AnswerGenerationProvider into one
@@ -415,24 +462,36 @@ class RAGService:
         )
 
         selected = _select_context(raw_results, self.config)
+        gate_blocked = False
         if self.config.corpus_token_gate:
             corpus_tokens = load_corpus_tokens(self.session)
             if unsupported_content_tokens(question, corpus_tokens):
                 selected = []
+                gate_blocked = True
         context_items = [
             _to_context_item(i + 1, result, self.config) for i, result in enumerate(selected)
         ]
 
         generated = self.answer_provider.generate(question, context_items)
-        citations = self._build_citations(generated.cited_indices, context_items)
+        evidence_status, grounded, answer_text, cited_indices = _finalize_evidence(
+            generated, context_items, gate_blocked
+        )
+        citations = self._build_citations(cited_indices, context_items)
+        if (
+            evidence_status in (EVIDENCE_SUPPORTED, EVIDENCE_PARTIALLY_SUPPORTED)
+            and not citations
+        ):
+            evidence_status = EVIDENCE_INSUFFICIENT
+            grounded = False
 
         return RAGAnswer(
-            answer=generated.answer_text,
+            answer=answer_text,
             citations=citations,
             sources=selected,
             retrieval_method=resolved_method,
-            grounded=generated.grounded,
+            grounded=grounded,
             context_used=len(context_items),
+            evidence_status=evidence_status,
         )
 
     @staticmethod

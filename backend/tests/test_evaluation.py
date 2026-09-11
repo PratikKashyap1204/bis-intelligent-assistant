@@ -401,3 +401,5 @@ def test_run_rag_evaluation_marks_no_result_case_ungrounded_when_empty(db_sessio
     assert report.ungrounded_rate == 1.0
     assert report.case_results[0].correctly_ungrounded is True
     assert report.case_results[0].grounded is False
+    assert report.case_results[0].evidence_status in {"insufficient", "out_of_scope"}
+    assert report.out_of_scope_rate is not None or report.insufficient_rate is not None

@@ -331,6 +331,10 @@ h1 {
   border-top: 4px solid var(--grounded);
 }
 
+.panel--partial {
+  border-top: 4px solid var(--warn);
+}
+
 .panel--insufficient {
   border-top: 4px solid var(--insufficient);
 }
@@ -350,6 +354,10 @@ h1 {
 
 .panel--grounded .panel__kicker {
   color: var(--grounded);
+}
+
+.panel--partial .panel__kicker {
+  color: var(--warn);
 }
 
 .panel--insufficient .panel__kicker,
